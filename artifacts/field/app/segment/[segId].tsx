@@ -94,8 +94,8 @@ export default function SegmentDetailScreen() {
   const navigation = useNavigation();
   const colors = useColors();
 
-  const { data: segment, isLoading: segLoading } = useGetSegment(segmentId);
-  const { data: bids, isLoading: bidsLoading } = useListBids(segmentId);
+  const { data: segment, isLoading: segLoading, isError: segError } = useGetSegment(segmentId);
+  const { data: bids, isLoading: bidsLoading, isError: bidsError } = useListBids(segmentId);
 
   useLayoutEffect(() => {
     if (segment) {
@@ -105,6 +105,7 @@ export default function SegmentDetailScreen() {
 
   const topPad = Platform.OS === "web" ? 67 : 0;
   const isLoading = segLoading || bidsLoading;
+  const isError = segError || bidsError;
 
   if (isLoading) {
     return (
@@ -114,18 +115,25 @@ export default function SegmentDetailScreen() {
     );
   }
 
-  if (!segment) {
+  if (isError || !segment) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background, paddingTop: topPad }]}>
-        <Feather name="alert-circle" size={40} color={colors.mutedForeground} />
-        <Text style={[styles.emptyTitle, { color: colors.foreground }]}>Segment Not Found</Text>
+        <Feather name={isError ? "wifi-off" : "alert-circle"} size={40} color={colors.mutedForeground} />
+        <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
+          {isError ? "Connection Error" : "Segment Not Found"}
+        </Text>
+        {isError && (
+          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+            Could not reach the server
+          </Text>
+        )}
       </View>
     );
   }
 
   const baseUrl = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
   const bidList = bids ?? [];
-  const selectedBid = bidList.find((b) => b.isSelected) ?? bidList[0] ?? null;
+  const selectedBid = bidList.find((b) => b.isSelected) ?? null;
   const materialFromBid = selectedBid?.material ?? null;
   const picUrl = materialFromBid?.pictureUrl
     ? materialFromBid.pictureUrl.startsWith("http")
@@ -226,14 +234,18 @@ export default function SegmentDetailScreen() {
         </View>
       )}
 
-      {!selectedBid && bidList.length === 0 && (
+      {!selectedBid && (
         <View
           style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}
         >
           <View style={styles.emptyBids}>
-            <Feather name="dollar-sign" size={28} color={colors.mutedForeground} />
+            <Feather
+              name={bidList.length === 0 ? "dollar-sign" : "alert-circle"}
+              size={28}
+              color={colors.mutedForeground}
+            />
             <Text style={[styles.emptyBidsText, { color: colors.mutedForeground }]}>
-              No vendor bids yet
+              {bidList.length === 0 ? "No vendor bids yet" : "No supplier selected"}
             </Text>
           </View>
         </View>
@@ -371,4 +383,5 @@ const styles = StyleSheet.create({
   },
   emptyBidsText: { fontSize: 14, fontFamily: "Inter_400Regular" },
   emptyTitle: { fontSize: 18, fontFamily: "Inter_600SemiBold", textAlign: "center" },
+  emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center", maxWidth: 260 },
 });

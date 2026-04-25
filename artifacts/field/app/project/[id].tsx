@@ -156,13 +156,24 @@ function BlueprintView({
   onSegmentPress: (seg: Segment) => void;
 }) {
   const colors = useColors();
-  const { data: segments, isLoading } = useListSegments(activeBp.id);
+  const { data: segments, isLoading, isError } = useListSegments(activeBp.id);
   const segs = segments ?? [];
 
   if (isLoading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.center}>
+        <Feather name="wifi-off" size={36} color={colors.mutedForeground} />
+        <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+          Could not load segments
+        </Text>
       </View>
     );
   }
@@ -235,13 +246,24 @@ function SegmentsListView({
   onSegmentPress: (seg: Segment) => void;
 }) {
   const colors = useColors();
-  const { data: segments, isLoading } = useListSegments(activeBp.id);
+  const { data: segments, isLoading, isError } = useListSegments(activeBp.id);
   const segs = segments ?? [];
 
   if (isLoading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.center}>
+        <Feather name="wifi-off" size={36} color={colors.mutedForeground} />
+        <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+          Could not load segments
+        </Text>
       </View>
     );
   }

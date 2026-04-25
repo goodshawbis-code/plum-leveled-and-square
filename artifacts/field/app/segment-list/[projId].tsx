@@ -95,7 +95,7 @@ export default function SegmentListScreen() {
   const router = useRouter();
   const colors = useColors();
 
-  const { data: blueprints, isLoading } = useListBlueprints(projectId);
+  const { data: blueprints, isLoading, isError } = useListBlueprints(projectId);
 
   const navigateToSegment = (seg: Segment) => {
     router.push({ pathname: "/segment/[segId]", params: { segId: seg.id } });
@@ -107,6 +107,18 @@ export default function SegmentListScreen() {
     return (
       <View style={[styles.center, { backgroundColor: colors.background, paddingTop: topPad }]}>
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background, paddingTop: topPad }]}>
+        <Feather name="wifi-off" size={40} color={colors.mutedForeground} />
+        <Text style={[styles.emptyTitle, { color: colors.foreground }]}>Connection Error</Text>
+        <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+          Could not reach the server
+        </Text>
       </View>
     );
   }
