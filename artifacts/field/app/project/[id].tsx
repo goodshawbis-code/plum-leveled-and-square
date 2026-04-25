@@ -2,8 +2,9 @@ import {
   useGetProject,
   useListBlueprints,
   useListSegments,
+  useGetProjectEstimate,
 } from "@workspace/api-client-react";
-import type { Blueprint, Segment } from "@workspace/api-client-react";
+import type { Blueprint, Segment, EstimateLineItem } from "@workspace/api-client-react";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -365,6 +366,81 @@ function SegmentsListView({
   );
 }
 
+function EstimateView({ projectId }: { projectId: number }) {
+  const colors = useColors();
+  const { data: estimate, isLoading, isError } = useGetProjectEstimate(projectId);
+
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isError || !estimate) {
+    return (
+      <View style={styles.center}>
+        <Feather name="file-text" size={40} color={colors.mutedForeground} />
+        <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No Estimate Yet</Text>
+        <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+          Add vendor bids in the office app to generate an estimate
+        </Text>
+      </View>
+    );
+  }
+
+  const total = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(estimate.totalCost);
+
+  return (
+    <View style={{ gap: 12 }}>
+      {/* Total banner */}
+      <View style={[styles.estimateTotalCard, { backgroundColor: colors.primary }]}>
+        <Text style={[styles.estimateTotalLabel, { color: colors.primaryForeground }]}>
+          HARD BID TOTAL
+        </Text>
+        <Text style={[styles.estimateTotalValue, { color: colors.primaryForeground }]}>
+          {total}
+        </Text>
+        <Text style={[styles.estimateTotalSub, { color: colors.primaryForeground }]}>
+          {estimate.lineItems.length} line {estimate.lineItems.length === 1 ? "item" : "items"}
+        </Text>
+      </View>
+
+      {/* Line items */}
+      <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
+        BID LINE ITEMS
+      </Text>
+      {estimate.lineItems.map((item: EstimateLineItem) => (
+        <View
+          key={item.segmentId}
+          style={[styles.estimateRow, { backgroundColor: colors.card, borderColor: colors.border }]}
+        >
+          <View style={styles.estimateRowTop}>
+            <Text style={[styles.estimateSegLabel, { color: colors.foreground }]} numberOfLines={1}>
+              {item.segmentLabel}
+            </Text>
+            <Text style={[styles.estimateRowTotal, { color: colors.primary }]}>
+              {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(item.lineTotal)}
+            </Text>
+          </View>
+          <Text style={[styles.estimateRowSub, { color: colors.mutedForeground }]} numberOfLines={1}>
+            {item.materialName} · {item.materialSpec}
+          </Text>
+          <View style={styles.estimateRowMeta}>
+            <Text style={[styles.estimateRowMetaText, { color: colors.mutedForeground }]}>
+              {item.vendorName}
+            </Text>
+            <Text style={[styles.estimateRowMetaText, { color: colors.mutedForeground }]}>
+              {item.quantity} {item.unit} @ ${item.unitPrice.toFixed(2)}
+            </Text>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function ProjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const projectId = Number(id);
@@ -372,6 +448,7 @@ export default function ProjectDetailScreen() {
   const navigation = useNavigation();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const [tabMode, setTabMode] = useState<"field" | "office">("field");
   const [view, setView] = useState<"blueprint" | "list">("blueprint");
   const [selectedBlueprintIdx, setSelectedBlueprintIdx] = useState(0);
 
@@ -450,10 +527,19 @@ export default function ProjectDetailScreen() {
       >
         <View style={[styles.tabSwitcher, { borderColor: colors.border }]}>
           <Pressable
-            style={[styles.tabBtn, styles.tabBtnLeft, { borderColor: colors.border }]}
+            style={[
+              styles.tabBtn,
+              styles.tabBtnLeft,
+              { borderColor: colors.border },
+              tabMode === "office" && { backgroundColor: colors.primary, borderColor: colors.primary },
+            ]}
+            onPress={() => {
+              if (tabMode !== "office" && Platform.OS !== "web") Haptics.selectionAsync();
+              setTabMode("office");
+            }}
           >
-            <Feather name="monitor" size={13} color={colors.mutedForeground} />
-            <Text style={[styles.tabBtnText, { color: colors.mutedForeground }]}>
+            <Feather name="monitor" size={13} color={tabMode === "office" ? colors.primaryForeground : colors.mutedForeground} />
+            <Text style={[styles.tabBtnText, { color: tabMode === "office" ? colors.primaryForeground : colors.mutedForeground }]}>
               Office · Estimate
             </Text>
           </Pressable>
@@ -461,11 +547,17 @@ export default function ProjectDetailScreen() {
             style={[
               styles.tabBtn,
               styles.tabBtnRight,
-              { backgroundColor: colors.primary, borderColor: colors.primary },
+              tabMode === "field"
+                ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                : { borderColor: colors.border },
             ]}
+            onPress={() => {
+              if (tabMode !== "field" && Platform.OS !== "web") Haptics.selectionAsync();
+              setTabMode("field");
+            }}
           >
-            <Feather name="user" size={13} color={colors.primaryForeground} />
-            <Text style={[styles.tabBtnText, { color: colors.primaryForeground }]}>
+            <Feather name="user" size={13} color={tabMode === "field" ? colors.primaryForeground : colors.mutedForeground} />
+            <Text style={[styles.tabBtnText, { color: tabMode === "field" ? colors.primaryForeground : colors.mutedForeground }]}>
               Field · Foreman
             </Text>
           </Pressable>
@@ -593,7 +685,9 @@ export default function ProjectDetailScreen() {
         </View>
 
         <View style={{ padding: 16, paddingBottom: 32, gap: 12 }}>
-          {!hasBlueprints ? (
+          {tabMode === "office" ? (
+            <EstimateView projectId={projectId} />
+          ) : !hasBlueprints ? (
             <View
               style={[
                 styles.emptyCard,
@@ -797,4 +891,27 @@ const styles = StyleSheet.create({
   },
   emptyTitle: { fontSize: 18, fontFamily: "Inter_600SemiBold", textAlign: "center" },
   emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center", maxWidth: 240 },
+
+  estimateTotalCard: {
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    gap: 4,
+  },
+  estimateTotalLabel: { fontSize: 11, fontFamily: "Inter_700Bold", letterSpacing: 1.2, opacity: 0.85 },
+  estimateTotalValue: { fontSize: 34, fontFamily: "Inter_700Bold" },
+  estimateTotalSub: { fontSize: 13, fontFamily: "Inter_400Regular", opacity: 0.75 },
+
+  estimateRow: {
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 14,
+    gap: 4,
+  },
+  estimateRowTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 8 },
+  estimateSegLabel: { flex: 1, fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  estimateRowTotal: { fontSize: 15, fontFamily: "Inter_700Bold" },
+  estimateRowSub: { fontSize: 13, fontFamily: "Inter_400Regular" },
+  estimateRowMeta: { flexDirection: "row", justifyContent: "space-between", marginTop: 2 },
+  estimateRowMetaText: { fontSize: 12, fontFamily: "Inter_400Regular" },
 });
