@@ -47,6 +47,9 @@ lib/
 | `vendors` | Vendor directory (name, contact, phone, email) |
 | `vendor_bids` | Bids per segment/material/vendor with quantity & unit price |
 | `estimates` | Generated project estimates (draft/final) |
+| `segment_photos` | Field photos attached to segments (fileUrl, caption) |
+
+Segments also carry `fieldNotes` (text, nullable) and `completedAt` (timestamp, nullable) updated by the field crew via `PATCH /segments/:id/field`.
 
 ## Segment Coordinates
 
@@ -76,6 +79,7 @@ Segment `x`, `y`, `width`, `height` are stored as **percentage values (0–100)*
 | POST | `/storage/uploads/request-url` | Get presigned upload URL |
 | GET | `/storage/public-objects/*` | Serve public files |
 | GET | `/storage/objects/*` | Serve private files |
+| GET | `/storage/static/*` | Serve local static files from `artifacts/api-server/static/` (blueprint images) |
 
 ## Key Commands
 

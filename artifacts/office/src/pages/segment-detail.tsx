@@ -9,6 +9,7 @@ import {
   useDeleteBid, 
   useListMaterials, 
   useListVendors,
+  useListSegmentPhotos,
   getListBidsQueryKey,
   useGetProject,
   getGetProjectQueryKey
@@ -52,6 +53,7 @@ export default function SegmentDetail() {
   
   const { data: materials } = useListMaterials();
   const { data: vendors } = useListVendors();
+  const { data: photos = [] } = useListSegmentPhotos(segmentId, { query: { enabled: !!segmentId } });
 
   const createBid = useCreateBid();
   const updateBid = useUpdateBid();
@@ -283,29 +285,100 @@ export default function SegmentDetail() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle>Segment Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="text-sm text-muted-foreground">Type</div>
-              <div className="font-medium capitalize">{segment.type}</div>
-            </div>
-            {segment.description && (
+        <div className="md:col-span-1 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Segment Details
+                {segment.completedAt ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <CheckCircle2 className="h-3 w-3" /> Done
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                    Pending
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
-                <div className="text-sm text-muted-foreground">Description</div>
-                <div className="text-sm mt-1">{segment.description}</div>
+                <div className="text-sm text-muted-foreground">Type</div>
+                <div className="font-medium capitalize">{segment.type}</div>
               </div>
-            )}
-            <div>
-              <div className="text-sm text-muted-foreground">Dimensions (Relative)</div>
-              <div className="text-sm mt-1 font-mono">
-                W: {segment.width.toFixed(1)}% &times; H: {segment.height.toFixed(1)}%
+              {segment.description && (
+                <div>
+                  <div className="text-sm text-muted-foreground">Description</div>
+                  <div className="text-sm mt-1">{segment.description}</div>
+                </div>
+              )}
+              <div>
+                <div className="text-sm text-muted-foreground">Dimensions (Relative)</div>
+                <div className="text-sm mt-1 font-mono">
+                  W: {segment.width.toFixed(1)}% &times; H: {segment.height.toFixed(1)}%
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              {segment.completedAt && (
+                <div>
+                  <div className="text-sm text-muted-foreground">Completed</div>
+                  <div className="text-sm mt-1 font-medium text-green-700">
+                    {new Date(segment.completedAt).toLocaleDateString("en-US", {
+                      month: "short", day: "numeric", year: "numeric"
+                    })}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Field Notes from crew */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Field Notes</CardTitle>
+              <CardDescription>Notes submitted by the field crew</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {segment.fieldNotes ? (
+                <p className="text-sm whitespace-pre-wrap">{segment.fieldNotes}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">No field notes yet.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Field Photos */}
+          {photos.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Field Photos</CardTitle>
+                <CardDescription>{photos.length} photo{photos.length !== 1 ? "s" : ""} from the field</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  {photos.map((photo) => {
+                    const src = photo.fileUrl.startsWith("http")
+                      ? photo.fileUrl
+                      : photo.fileUrl.startsWith("/storage/")
+                        ? `/api${photo.fileUrl}`
+                        : photo.fileUrl;
+                    return (
+                      <div key={photo.id} className="rounded overflow-hidden border aspect-square bg-muted">
+                        <img
+                          src={src}
+                          alt={photo.caption ?? "Field photo"}
+                          className="w-full h-full object-cover"
+                        />
+                        {photo.caption && (
+                          <p className="text-xs text-muted-foreground px-1 pb-1 truncate">{photo.caption}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
         <div className="md:col-span-2 space-y-6">
           {Object.entries(bidsByMaterial).map(([materialIdStr, materialBids]) => {

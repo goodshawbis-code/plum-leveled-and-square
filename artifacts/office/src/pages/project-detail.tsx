@@ -23,7 +23,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, FileImage, Image as ImageIcon, Calculator, ArrowLeft, Maximize, Layers } from "lucide-react";
+import { Plus, Trash2, FileImage, Image as ImageIcon, Calculator, ArrowLeft, Maximize, Layers, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -304,6 +304,7 @@ function SegmentListPanel({ blueprintId, projectId }: { blueprintId: number; pro
               <TableRow>
                 <TableHead>Label</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Field Status</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -321,6 +322,17 @@ function SegmentListPanel({ blueprintId, projectId }: { blueprintId: number; pro
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${typeColors[seg.type] ?? "bg-gray-100 text-gray-800"}`}>
                       {seg.type}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    {seg.completedAt ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                        <CheckCircle2 className="h-3 w-3" /> Done
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">
+                        Pending
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm max-w-xs truncate">
                     {seg.description ?? "—"}
@@ -345,6 +357,20 @@ function SegmentListPanel({ blueprintId, projectId }: { blueprintId: number; pro
     </Card>
   );
 }
+
+function buildStorageUrl(rawUrl: string): string {
+  if (!rawUrl) return rawUrl;
+  if (rawUrl.startsWith("http")) return rawUrl;
+  if (rawUrl.startsWith("/storage/")) return `/api${rawUrl}`;
+  return rawUrl;
+}
+
+const PIN_COLORS: Record<string, { bg: string; border: string }> = {
+  wall:      { bg: "#3b82f6", border: "#1d4ed8" },
+  grid:      { bg: "#22c55e", border: "#15803d" },
+  elevation: { bg: "#f59e0b", border: "#b45309" },
+  detail:    { bg: "#a855f7", border: "#7e22ce" },
+};
 
 function BlueprintViewer({ blueprint, projectId }: { blueprint: Blueprint, projectId: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -488,7 +514,7 @@ function BlueprintViewer({ blueprint, projectId }: { blueprint: Blueprint, proje
               style={{ height: '70vh', minHeight: '400px' }}
             >
               <object
-                data={blueprint.fileUrl}
+                data={buildStorageUrl(blueprint.fileUrl)}
                 type="application/pdf"
                 className="w-full h-full"
                 style={{ pointerEvents: 'none', display: 'block' }}
@@ -496,7 +522,7 @@ function BlueprintViewer({ blueprint, projectId }: { blueprint: Blueprint, proje
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
                   <p className="text-sm">PDF preview unavailable in this browser.</p>
                   <a
-                    href={blueprint.fileUrl}
+                    href={buildStorageUrl(blueprint.fileUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary underline text-sm"
@@ -510,37 +536,82 @@ function BlueprintViewer({ blueprint, projectId }: { blueprint: Blueprint, proje
           ) : (
             <img
               ref={imgRef}
-              src={blueprint.fileUrl}
+              src={buildStorageUrl(blueprint.fileUrl)}
               alt={blueprint.fileName}
               className="block max-w-none shadow-sm"
               style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none' }}
               draggable={false}
             />
           )}
-          
-          {/* Existing Segments */}
-          {segments?.map(seg => (
-            <div
-              key={seg.id}
-              className={`absolute border-2 cursor-pointer transition-colors hover:brightness-110 ${getColorForType(seg.type)}`}
-              style={{
-                left: `${seg.x}%`,
-                top: `${seg.y}%`,
-                width: `${seg.width}%`,
-                height: `${seg.height}%`,
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setLocation(`/projects/${projectId}/segments/${seg.id}`);
-              }}
-              title={seg.label}
-              data-testid={`segment-${seg.id}`}
-            >
-              <div className="absolute -top-6 left-0 bg-background/90 text-foreground text-xs px-1.5 py-0.5 rounded shadow-sm border whitespace-nowrap pointer-events-none">
-                {seg.label}
+
+          {/* Segment overlays with numbered pins */}
+          {segments?.map((seg, idx) => {
+            const done = !!seg.completedAt;
+            const colors = PIN_COLORS[seg.type] ?? { bg: "#6b7280", border: "#374151" };
+            const pinBg = done ? "#16a34a" : colors.bg;
+            const pinBorder = done ? "#14532d" : colors.border;
+            return (
+              <div key={seg.id}>
+                {/* Coloured area overlay */}
+                <div
+                  className="absolute border-2 cursor-pointer transition-opacity hover:opacity-80"
+                  style={{
+                    left: `${seg.x}%`,
+                    top: `${seg.y}%`,
+                    width: `${seg.width}%`,
+                    height: `${seg.height}%`,
+                    borderColor: pinBg,
+                    backgroundColor: `${pinBg}22`,
+                  }}
+                  onClick={(e) => { e.stopPropagation(); setLocation(`/projects/${projectId}/segments/${seg.id}`); }}
+                  title={seg.label}
+                  data-testid={`segment-${seg.id}`}
+                />
+                {/* Numbered pin centred on the overlay */}
+                <div
+                  className="absolute flex items-center justify-center cursor-pointer select-none"
+                  style={{
+                    left: `calc(${seg.x}% + ${seg.width / 2}% - 12px)`,
+                    top: `calc(${seg.y}% + ${seg.height / 2}% - 12px)`,
+                    width: 24,
+                    height: 24,
+                    borderRadius: "50%",
+                    background: pinBg,
+                    border: `2px solid ${pinBorder}`,
+                    color: "#fff",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    zIndex: 10,
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
+                  }}
+                  onClick={(e) => { e.stopPropagation(); setLocation(`/projects/${projectId}/segments/${seg.id}`); }}
+                  title={seg.label}
+                >
+                  {done ? <CheckCircle2 size={13} /> : idx + 1}
+                </div>
+                {/* Label tooltip above overlay */}
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: `${seg.x}%`,
+                    top: `calc(${seg.y}% - 22px)`,
+                    background: "rgba(255,255,255,0.93)",
+                    border: `1px solid ${pinBg}`,
+                    borderRadius: 4,
+                    padding: "1px 6px",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "#111",
+                    whiteSpace: "nowrap",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                    zIndex: 11,
+                  }}
+                >
+                  {seg.label}{done && " ✓"}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Current Drawing Rect */}
           {currentRect && isDrawing && (
