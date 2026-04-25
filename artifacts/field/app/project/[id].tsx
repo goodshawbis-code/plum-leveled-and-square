@@ -19,24 +19,35 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { pctFraction } from "@/utils/coords";
 
-const SEGMENT_COLORS = [
-  "#fc6703",
-  "#3b82f6",
-  "#22c55e",
-  "#a855f7",
-  "#f59e0b",
-  "#ec4899",
-  "#06b6d4",
+const STATUS_WORKFLOW = ["DRAFT", "ESTIMATING", "BID SENT", "IN PROGRESS", "CO"];
+
+const STATUS_MAP: Record<string, string> = {
+  active: "ESTIMATING",
+  completed: "IN PROGRESS",
+  archived: "DRAFT",
+};
+
+const PIN_COLORS = [
+  "#d93a2a",
+  "#d93a2a",
+  "#d93a2a",
+  "#d93a2a",
+  "#d93a2a",
+  "#d93a2a",
+  "#9333ea",
+  "#22a05b",
 ];
 
-function getSegmentColor(index: number) {
-  return SEGMENT_COLORS[index % SEGMENT_COLORS.length];
+function getPinColor(index: number, done: boolean): string {
+  if (done) return "#1d2d5e";
+  return PIN_COLORS[index % PIN_COLORS.length];
 }
 
-function BlueprintWithSegments({
+function BlueprintWithPins({
   blueprint,
   segments,
   onSegmentPress,
@@ -61,49 +72,48 @@ function BlueprintWithSegments({
     Image.getSize(imageUrl, (w, h) => setImgSize({ width: w, height: h }), () => {});
   }, [imageUrl]);
 
+  const bpH = displayHeight || displayWidth * 0.75;
+
   return (
-    <View style={[styles.blueprintContainer, { borderColor: colors.border }]}>
+    <View style={[styles.blueprintWrapper, { borderColor: colors.border }]}>
       <Image
         source={{ uri: imageUrl }}
-        style={{ width: displayWidth, height: displayHeight || displayWidth * 0.75 }}
+        style={{ width: displayWidth, height: bpH }}
         resizeMode="contain"
       />
       {segments.map((seg, idx) => {
-          const color = getSegmentColor(idx);
-          const bpH = displayHeight || displayWidth * 0.75;
-          const left = pctFraction(seg.x) * displayWidth;
-          const top = pctFraction(seg.y) * bpH;
-          const width = pctFraction(seg.width) * displayWidth;
-          const height = pctFraction(seg.height) * bpH;
-          return (
-            <TouchableOpacity
-              key={seg.id}
-              testID={`segment-overlay-${seg.id}`}
-              onPress={() => onSegmentPress(seg)}
+        const left = pctFraction(seg.x) * displayWidth;
+        const top = pctFraction(seg.y) * bpH;
+        const width = pctFraction(seg.width) * displayWidth;
+        const height = pctFraction(seg.height) * bpH;
+        const pinX = left + width / 2 - 16;
+        const pinY = top + height / 2 - 16;
+        const done = !!seg.completedAt;
+        const color = getPinColor(idx, done);
+        return (
+          <TouchableOpacity
+            key={seg.id}
+            testID={`segment-overlay-${seg.id}`}
+            onPress={() => onSegmentPress(seg)}
+            style={[styles.pinWrapper, { left: pinX, top: pinY }]}
+            activeOpacity={0.75}
+          >
+            <View
               style={[
-                styles.segmentOverlay,
-                {
-                  left,
-                  top,
-                  width,
-                  height,
-                  borderColor: color,
-                  backgroundColor: `${color}22`,
-                },
+                styles.pin,
+                { backgroundColor: color },
               ]}
-              activeOpacity={0.7}
             >
-              <Text style={[styles.segmentLabel, { color }]} numberOfLines={1}>
-                {seg.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+              <Text style={styles.pinText}>{idx + 1}</Text>
+            </View>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
 
-function SegmentListItem({
+function SegmentRow({
   segment,
   index,
   onPress,
@@ -113,29 +123,34 @@ function SegmentListItem({
   onPress: () => void;
 }) {
   const colors = useColors();
-  const color = getSegmentColor(index);
+  const done = !!segment.completedAt;
+  const pinColor = getPinColor(index, done);
+
   return (
     <Pressable
       testID={`segment-list-${segment.id}`}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.segItem,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          opacity: pressed ? 0.85 : 1,
-        },
+        styles.segRow,
+        { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.85 : 1 },
       ]}
     >
-      <View style={[styles.segDot, { backgroundColor: color }]} />
+      <View style={[styles.segPin, { backgroundColor: pinColor }]}>
+        <Text style={styles.segPinText}>{index + 1}</Text>
+      </View>
       <View style={{ flex: 1 }}>
         <Text style={[styles.segName, { color: colors.foreground }]}>{segment.label}</Text>
         {segment.description ? (
-          <Text style={[styles.segNotes, { color: colors.mutedForeground }]} numberOfLines={1}>
+          <Text style={[styles.segDesc, { color: colors.mutedForeground }]} numberOfLines={1}>
             {segment.description}
           </Text>
         ) : null}
       </View>
+      {done && (
+        <View style={[styles.doneBadge, { backgroundColor: colors.success }]}>
+          <Text style={[styles.doneBadgeText, { color: colors.successForeground }]}>DONE</Text>
+        </View>
+      )}
       <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
     </Pressable>
   );
@@ -178,7 +193,7 @@ function BlueprintView({
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View style={{ gap: 12 }}>
       {blueprints.length > 1 && (
         <ScrollView
           horizontal
@@ -214,26 +229,36 @@ function BlueprintView({
           ))}
         </ScrollView>
       )}
-      <BlueprintWithSegments
+
+      <BlueprintWithPins
         blueprint={activeBp}
         segments={segs}
         onSegmentPress={onSegmentPress}
       />
-      {segs.length > 0 ? (
-        <View style={styles.legendRow}>
-          <Text style={[styles.legendTitle, { color: colors.mutedForeground }]}>
-            TAP A HIGHLIGHTED AREA TO VIEW DETAILS
-          </Text>
-        </View>
-      ) : (
+
+      {segs.length === 0 ? (
         <View style={styles.center}>
           <Feather name="tag" size={32} color={colors.mutedForeground} />
           <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
             No segments tagged yet
           </Text>
         </View>
+      ) : (
+        <View style={{ gap: 8 }}>
+          <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
+            TAKEOFF SEGMENTS · {segs.length} {segs.length === 1 ? "item" : "items"}
+          </Text>
+          {segs.map((seg, idx) => (
+            <SegmentRow
+              key={seg.id}
+              segment={seg}
+              index={idx}
+              onPress={() => onSegmentPress(seg)}
+            />
+          ))}
+        </View>
       )}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -280,24 +305,19 @@ function SegmentsListView({
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={[
-        styles.scrollContent,
-        { paddingBottom: Platform.OS === "web" ? 34 : 20 },
-      ]}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.segList}>
-        {segs.map((seg, idx) => (
-          <SegmentListItem
-            key={seg.id}
-            segment={seg}
-            index={idx}
-            onPress={() => onSegmentPress(seg)}
-          />
-        ))}
-      </View>
-    </ScrollView>
+    <View style={{ gap: 8 }}>
+      <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
+        TAKEOFF SEGMENTS · {segs.length} {segs.length === 1 ? "item" : "items"}
+      </Text>
+      {segs.map((seg, idx) => (
+        <SegmentRow
+          key={seg.id}
+          segment={seg}
+          index={idx}
+          onPress={() => onSegmentPress(seg)}
+        />
+      ))}
+    </View>
   );
 }
 
@@ -307,6 +327,7 @@ export default function ProjectDetailScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const [view, setView] = useState<"blueprint" | "list">("blueprint");
   const [selectedBlueprintIdx, setSelectedBlueprintIdx] = useState(0);
 
@@ -314,33 +335,17 @@ export default function ProjectDetailScreen() {
   const { data: blueprints, isLoading: bpLoading } = useListBlueprints(projectId);
   const activeBp = blueprints?.[selectedBlueprintIdx];
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: project?.name ?? "Project",
-      headerRight: blueprints && blueprints.length > 0
-        ? () => (
-            <Pressable
-              testID="open-segment-list"
-              onPress={() =>
-                router.push({
-                  pathname: "/segment-list/[projId]",
-                  params: { projId: projectId },
-                })
-              }
-              style={{ marginRight: 4 }}
-            >
-              <Feather name="list" size={22} color={colors.primary} />
-            </Pressable>
-          )
-        : undefined,
-    });
-  }, [project, blueprints, navigation, router, colors.primary, projectId]);
+  const currentStatus = STATUS_MAP[project?.status ?? "active"] ?? "ESTIMATING";
 
-  const topPad = Platform.OS === "web" ? 67 : 0;
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
 
   const navigateToSegment = (seg: Segment) => {
     router.push({ pathname: "/segment/[segId]", params: { segId: seg.id } });
   };
+
+  const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   if (bpLoading) {
     return (
@@ -354,8 +359,112 @@ export default function ProjectDetailScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.toolbar, { borderBottomColor: colors.border, paddingTop: topPad }]}>
-        <View style={[styles.viewToggle, { backgroundColor: colors.muted }]}>
+      {/* Custom header */}
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: colors.card,
+            borderBottomColor: colors.border,
+            paddingTop: topPad + 8,
+          },
+        ]}
+      >
+        <Pressable onPress={() => router.back()} hitSlop={10}>
+          <Feather name="arrow-left" size={22} color={colors.foreground} />
+        </Pressable>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]} numberOfLines={1}>
+          {project?.name ?? "Project"}
+        </Text>
+        <Pressable hitSlop={10}>
+          <Feather name="trash-2" size={20} color={colors.destructive} />
+        </Pressable>
+      </View>
+
+      {/* Office / Field tab switcher */}
+      <View
+        style={[
+          styles.tabSwitcherWrap,
+          { backgroundColor: colors.card, borderBottomColor: colors.border },
+        ]}
+      >
+        <View style={[styles.tabSwitcher, { borderColor: colors.border }]}>
+          <Pressable
+            style={[styles.tabBtn, styles.tabBtnLeft, { borderColor: colors.border }]}
+          >
+            <Feather name="monitor" size={13} color={colors.mutedForeground} />
+            <Text style={[styles.tabBtnText, { color: colors.mutedForeground }]}>
+              Office · Estimate
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.tabBtn,
+              styles.tabBtnRight,
+              { backgroundColor: colors.primary, borderColor: colors.primary },
+            ]}
+          >
+            <Feather name="user" size={13} color={colors.primaryForeground} />
+            <Text style={[styles.tabBtnText, { color: colors.primaryForeground }]}>
+              Field · Foreman
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        {/* Project info card */}
+        <View
+          style={[
+            styles.infoCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.infoName, { color: colors.foreground }]}>
+            {project?.name}
+          </Text>
+          {project?.address ? (
+            <View style={styles.infoAddrRow}>
+              <Feather name="map-pin" size={12} color={colors.mutedForeground} />
+              <Text style={[styles.infoAddr, { color: colors.mutedForeground }]}>
+                {project.address}
+              </Text>
+            </View>
+          ) : null}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.pillsRow}
+          >
+            {STATUS_WORKFLOW.map((step) => {
+              const isActive = step === currentStatus;
+              return (
+                <View
+                  key={step}
+                  style={[
+                    styles.pill,
+                    {
+                      backgroundColor: isActive ? colors.primary : "transparent",
+                      borderColor: isActive ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.pillText,
+                      { color: isActive ? colors.primaryForeground : colors.mutedForeground },
+                    ]}
+                  >
+                    {step}
+                  </Text>
+                </View>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* Blueprint / List toggle */}
+        <View style={[styles.toggleWrap, { backgroundColor: colors.muted }]}>
           <Pressable
             testID="view-toggle-blueprint"
             onPress={() => setView("blueprint")}
@@ -366,12 +475,12 @@ export default function ProjectDetailScreen() {
           >
             <Feather
               name="map"
-              size={16}
+              size={14}
               color={view === "blueprint" ? colors.primary : colors.mutedForeground}
             />
             <Text
               style={[
-                styles.toggleText,
+                styles.toggleBtnText,
                 { color: view === "blueprint" ? colors.primary : colors.mutedForeground },
               ]}
             >
@@ -388,12 +497,12 @@ export default function ProjectDetailScreen() {
           >
             <Feather
               name="list"
-              size={16}
+              size={14}
               color={view === "list" ? colors.primary : colors.mutedForeground}
             />
             <Text
               style={[
-                styles.toggleText,
+                styles.toggleBtnText,
                 { color: view === "list" ? colors.primary : colors.mutedForeground },
               ]}
             >
@@ -401,27 +510,34 @@ export default function ProjectDetailScreen() {
             </Text>
           </Pressable>
         </View>
-      </View>
 
-      {!hasBlueprints ? (
-        <View style={styles.center}>
-          <Feather name="file" size={48} color={colors.mutedForeground} />
-          <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No Blueprint</Text>
-          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-            Upload a blueprint in the office app
-          </Text>
+        <View style={{ padding: 16, paddingBottom: 32, gap: 12 }}>
+          {!hasBlueprints ? (
+            <View
+              style={[
+                styles.emptyCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Feather name="file" size={40} color={colors.mutedForeground} />
+              <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No Blueprint</Text>
+              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                Upload a blueprint in the office app
+              </Text>
+            </View>
+          ) : view === "blueprint" && activeBp ? (
+            <BlueprintView
+              activeBp={activeBp}
+              blueprints={blueprints}
+              selectedBlueprintIdx={selectedBlueprintIdx}
+              onSelectBlueprint={setSelectedBlueprintIdx}
+              onSegmentPress={navigateToSegment}
+            />
+          ) : activeBp ? (
+            <SegmentsListView activeBp={activeBp} onSegmentPress={navigateToSegment} />
+          ) : null}
         </View>
-      ) : view === "blueprint" && activeBp ? (
-        <BlueprintView
-          activeBp={activeBp}
-          blueprints={blueprints}
-          selectedBlueprintIdx={selectedBlueprintIdx}
-          onSelectBlueprint={setSelectedBlueprintIdx}
-          onSegmentPress={navigateToSegment}
-        />
-      ) : activeBp ? (
-        <SegmentsListView activeBp={activeBp} onSegmentPress={navigateToSegment} />
-      ) : null}
+      </ScrollView>
     </View>
   );
 }
@@ -429,27 +545,77 @@ export default function ProjectDetailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 12 },
-  toolbar: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  viewToggle: {
-    flexDirection: "row",
-    borderRadius: 8,
-    padding: 3,
-    alignSelf: "flex-start",
-  },
-  toggleBtn: {
+
+  header: {
     flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    gap: 12,
+  },
+  headerTitle: { flex: 1, fontSize: 17, fontFamily: "Inter_700Bold", textAlign: "center" },
+
+  tabSwitcherWrap: {
+    padding: 12,
+    borderBottomWidth: 1,
+  },
+  tabSwitcher: {
+    flexDirection: "row",
+    borderRadius: 10,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  tabBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 6,
-    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 0,
+  },
+  tabBtnLeft: { borderRightWidth: 1 },
+  tabBtnRight: {},
+  tabBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+
+  infoCard: {
+    margin: 16,
+    marginBottom: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 16,
+  },
+  infoName: { fontSize: 20, fontFamily: "Inter_700Bold", marginBottom: 6 },
+  infoAddrRow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 12 },
+  infoAddr: { fontSize: 13, fontFamily: "Inter_400Regular", flex: 1 },
+  pillsRow: { gap: 6, paddingRight: 4 },
+  pill: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  pillText: { fontSize: 11, fontFamily: "Inter_700Bold", letterSpacing: 0.3 },
+
+  toggleWrap: {
+    flexDirection: "row",
+    marginHorizontal: 16,
+    marginBottom: 4,
+    borderRadius: 8,
+    padding: 3,
+  },
+  toggleBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
     paddingVertical: 8,
     borderRadius: 6,
   },
-  toggleText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
-  scrollContent: { padding: 16, gap: 12 },
+  toggleBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+
   bpTabs: { gap: 8, paddingBottom: 4 },
   bpTab: {
     paddingHorizontal: 14,
@@ -458,44 +624,66 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   bpTabText: { fontSize: 13, fontFamily: "Inter_500Medium" },
-  blueprintContainer: {
-    borderWidth: 1,
-    borderRadius: 8,
+
+  blueprintWrapper: {
+    borderRadius: 10,
     overflow: "hidden",
     position: "relative",
+    borderWidth: 1,
   },
-  segmentOverlay: {
-    position: "absolute",
-    borderWidth: 2,
-    borderRadius: 4,
+  pinWrapper: { position: "absolute", width: 32, height: 32 },
+  pin: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 40,
-    minHeight: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 4,
   },
-  segmentLabel: {
-    fontSize: 9,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 0.3,
-    paddingHorizontal: 2,
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+  pinText: { color: "#ffffff", fontSize: 13, fontFamily: "Inter_700Bold" },
+
+  sectionLabel: {
+    fontSize: 10,
+    fontFamily: "Inter_600SemiBold",
+    letterSpacing: 0.8,
+    marginBottom: 2,
   },
-  legendRow: { alignItems: "center", paddingVertical: 4 },
-  legendTitle: { fontSize: 10, fontFamily: "Inter_500Medium", letterSpacing: 0.5 },
-  segList: { gap: 10 },
-  segItem: {
+  segRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    padding: 16,
-    borderRadius: 8,
+    padding: 14,
+    borderRadius: 10,
     borderWidth: 1,
   },
-  segDot: { width: 12, height: 12, borderRadius: 6 },
+  segPin: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  segPinText: { color: "#ffffff", fontSize: 12, fontFamily: "Inter_700Bold" },
   segName: { fontSize: 15, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
-  segNotes: { fontSize: 13, fontFamily: "Inter_400Regular" },
+  segDesc: { fontSize: 13, fontFamily: "Inter_400Regular" },
+  doneBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  doneBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold" },
+
+  emptyCard: {
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 32,
+    alignItems: "center",
+    gap: 10,
+  },
   emptyTitle: { fontSize: 18, fontFamily: "Inter_600SemiBold", textAlign: "center" },
-  emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center", maxWidth: 260 },
+  emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center", maxWidth: 240 },
 });

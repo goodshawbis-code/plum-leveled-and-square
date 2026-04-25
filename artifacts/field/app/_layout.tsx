@@ -54,7 +54,7 @@ function RootLayoutNav() {
         contentStyle: { backgroundColor: colors.background },
       }}
     >
-      <Stack.Screen name="index" options={{ title: "plumb level and Squared" }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="project/[id]" options={{ title: "Project" }} />
       <Stack.Screen name="segment-list/[projId]" options={{ title: "All Segments" }} />
       <Stack.Screen name="segment/[segId]" options={{ title: "Segment" }} />
