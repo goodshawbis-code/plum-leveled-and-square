@@ -160,9 +160,7 @@ export default function ProjectDetailScreen() {
   const { data: project } = useGetProject(projectId);
   const { data: blueprints, isLoading: bpLoading } = useListBlueprints(projectId);
   const activeBp = blueprints?.[selectedBlueprintIdx];
-  const { data: segments, isLoading: segLoading } = useListSegments(activeBp?.id ?? 0, {
-    query: { enabled: !!activeBp },
-  });
+  const { data: segments, isLoading: segLoading } = useListSegments(activeBp?.id ?? 0);
 
   useLayoutEffect(() => {
     if (project) {
