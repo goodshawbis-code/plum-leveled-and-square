@@ -1,5 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { Readable } from "stream";
+import express from "express";
+import { join } from "path";
 import {
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
@@ -8,6 +10,15 @@ import { ObjectStorageService } from "../lib/objectStorage";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
+
+const staticDir = join(process.cwd(), "static");
+
+router.use("/storage/static", express.static(staticDir, {
+  maxAge: "7d",
+  setHeaders: (res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  },
+}));
 
 /**
  * POST /storage/uploads/request-url
