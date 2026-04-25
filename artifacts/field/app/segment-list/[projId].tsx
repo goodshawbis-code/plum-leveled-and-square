@@ -65,7 +65,11 @@ function BlueprintSegments({
               onPress={() => onSegmentPress(seg)}
               style={({ pressed }) => [
                 styles.segItem,
-                { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.85 : 1 },
+                {
+                  backgroundColor: colors.card,
+                  borderColor: seg.completedAt ? colors.primary : colors.border,
+                  opacity: pressed ? 0.85 : 1,
+                },
               ]}
             >
               <View style={[styles.segDot, { backgroundColor: color }]} />
@@ -80,7 +84,14 @@ function BlueprintSegments({
                   </Text>
                 ) : null}
               </View>
-              <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+              {seg.completedAt ? (
+                <View style={[styles.doneBadge, { backgroundColor: colors.primary }]}>
+                  <Feather name="check" size={11} color={colors.primaryForeground} />
+                  <Text style={[styles.doneBadgeText, { color: colors.primaryForeground }]}>DONE</Text>
+                </View>
+              ) : (
+                <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+              )}
             </Pressable>
           );
         })
@@ -183,6 +194,15 @@ const styles = StyleSheet.create({
   segDot: { width: 12, height: 12, borderRadius: 6 },
   segName: { fontSize: 15, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
   segDesc: { fontSize: 13, fontFamily: "Inter_400Regular" },
+  doneBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  doneBadgeText: { fontSize: 9, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
   emptyTitle: { fontSize: 18, fontFamily: "Inter_600SemiBold", textAlign: "center" },
   emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center", maxWidth: 260 },
 });

@@ -144,7 +144,7 @@ export const createBlueprintBodyPageCountDefault = 1;
 
 export const CreateBlueprintBody = zod.object({
   file: zod
-    .any()
+    .instanceof(File)
     .describe("The blueprint PDF or image file to upload"),
   pageCount: zod
     .number()
@@ -193,6 +193,8 @@ export const ListSegmentsResponseItem = zod.object({
   width: zod.number(),
   height: zod.number(),
   description: zod.string(),
+  fieldNotes: zod.string().nullish(),
+  completedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -232,6 +234,8 @@ export const GetSegmentResponse = zod.object({
   width: zod.number(),
   height: zod.number(),
   description: zod.string(),
+  fieldNotes: zod.string().nullish(),
+  completedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -263,6 +267,8 @@ export const UpdateSegmentResponse = zod.object({
   width: zod.number(),
   height: zod.number(),
   description: zod.string(),
+  fieldNotes: zod.string().nullish(),
+  completedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -431,6 +437,64 @@ export const UpdateVendorResponse = zod.object({
  */
 export const DeleteVendorParams = zod.object({
   id: zod.coerce.number(),
+});
+
+/**
+ * @summary Update field notes and completion status (foreman)
+ */
+export const UpdateSegmentFieldParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateSegmentFieldBody = zod.object({
+  fieldNotes: zod.string().nullish(),
+  completedAt: zod.coerce.date().nullish(),
+});
+
+export const UpdateSegmentFieldResponse = zod.object({
+  id: zod.number(),
+  blueprintId: zod.number(),
+  label: zod.string(),
+  type: zod.enum(["wall", "grid", "elevation", "detail"]),
+  x: zod.number(),
+  y: zod.number(),
+  width: zod.number(),
+  height: zod.number(),
+  description: zod.string(),
+  fieldNotes: zod.string().nullish(),
+  completedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary List photos for a segment
+ */
+export const ListSegmentPhotosParams = zod.object({
+  segmentId: zod.coerce.number(),
+});
+
+export const ListSegmentPhotosResponseItem = zod.object({
+  id: zod.number(),
+  segmentId: zod.number(),
+  fileUrl: zod.string(),
+  caption: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const ListSegmentPhotosResponse = zod.array(
+  ListSegmentPhotosResponseItem,
+);
+
+/**
+ * @summary Upload a photo for a segment
+ */
+export const UploadSegmentPhotoParams = zod.object({
+  segmentId: zod.coerce.number(),
+});
+
+export const UploadSegmentPhotoBody = zod.object({
+  photo: zod.instanceof(File),
+  caption: zod.string().optional(),
 });
 
 /**

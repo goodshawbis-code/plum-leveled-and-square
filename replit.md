@@ -4,7 +4,7 @@
 
 Two-lane construction estimating system:
 - **Office/GC Web App** — contractors upload blueprints, tag segments, assign materials, compare 3 vendor bids, and generate hard-bid-ready estimates
-- **Field Mobile App** (Expo) — foremen tap blueprint segments to see assigned material, photo, vendor, quantity, and placement notes
+- **Field Mobile App** (Expo) — foremen tap blueprint segments to see assigned material, vendor, quantity, and notes; can add field notes, mark segments complete, and attach job site photos
 
 pnpm workspace monorepo using TypeScript. All apps share the same backend API and PostgreSQL database.
 
@@ -64,6 +64,8 @@ Segment `x`, `y`, `width`, `height` are stored as **percentage values (0–100)*
 | GET/DELETE | `/blueprints/:id` | Get / delete blueprint |
 | GET/POST | `/blueprints/:blueprintId/segments` | List / create segments |
 | GET/PATCH/DELETE | `/segments/:id` | Get / update / delete segment |
+| PATCH | `/segments/:id/field` | Update field notes + completion (foreman) |
+| GET/POST | `/segments/:segmentId/photos` | List / upload field photos |
 | GET/POST | `/materials` | List / create materials |
 | GET/PATCH/DELETE | `/materials/:id` | Get / update / delete material |
 | GET/POST | `/vendors` | List / create vendors |

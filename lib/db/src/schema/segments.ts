@@ -15,6 +15,8 @@ export const segmentsTable = pgTable("segments", {
   width: real("width").notNull().default(0),
   height: real("height").notNull().default(0),
   description: text("description").notNull().default(""),
+  fieldNotes: text("field_notes"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

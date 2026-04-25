@@ -564,6 +564,91 @@ paths:
         "204":
           description: Deleted
 
+  # ── Field Updates (foreman) ───────────────────────────────────────────────
+  /segments/{id}/field:
+    patch:
+      operationId: updateSegmentField
+      tags: [segments]
+      summary: Update field notes and completion status (foreman)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSegmentFieldBody"
+      responses:
+        "200":
+          description: Updated segment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Segment"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Segment Photos ────────────────────────────────────────────────────────
+  /segments/{segmentId}/photos:
+    get:
+      operationId: listSegmentPhotos
+      tags: [segments]
+      summary: List photos for a segment
+      parameters:
+        - name: segmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of photos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SegmentPhoto"
+    post:
+      operationId: uploadSegmentPhoto
+      tags: [segments]
+      summary: Upload a photo for a segment
+      parameters:
+        - name: segmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                photo:
+                  type: string
+                  format: binary
+                caption:
+                  type: string
+              required:
+                - photo
+      responses:
+        "201":
+          description: Created photo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SegmentPhoto"
+
   # ── Vendor Bids ───────────────────────────────────────────────────────────
   /segments/{segmentId}/bids:
     get:
@@ -829,6 +914,13 @@ components:
           type: number
         description:
           type: string
+        fieldNotes:
+          type: string
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -887,6 +979,38 @@ components:
           type: number
         description:
           type: string
+
+    UpdateSegmentFieldBody:
+      type: object
+      properties:
+        fieldNotes:
+          type: string
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    SegmentPhoto:
+      type: object
+      properties:
+        id:
+          type: integer
+        segmentId:
+          type: integer
+        fileUrl:
+          type: string
+        caption:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - segmentId
+        - fileUrl
+        - createdAt
 
     # ── Material ─────────────────────────────────────────────────────────────
     Material:

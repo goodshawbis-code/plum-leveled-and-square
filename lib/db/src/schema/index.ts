@@ -1,6 +1,7 @@
 export * from "./projects";
 export * from "./blueprints";
 export * from "./segments";
+export * from "./segment_photos";
 export * from "./materials";
 export * from "./vendors";
 export * from "./vendor_bids";

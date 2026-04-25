@@ -99,6 +99,8 @@ export interface Segment {
   width: number;
   height: number;
   description: string;
+  fieldNotes?: string | null;
+  completedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -141,6 +143,19 @@ export interface UpdateSegmentBody {
   width?: number;
   height?: number;
   description?: string;
+}
+
+export interface UpdateSegmentFieldBody {
+  fieldNotes?: string | null;
+  completedAt?: string | null;
+}
+
+export interface SegmentPhoto {
+  id: number;
+  segmentId: number;
+  fileUrl: string;
+  caption?: string | null;
+  createdAt: string;
 }
 
 export interface Material {
@@ -307,3 +322,8 @@ export interface RequestUploadUrlResponse {
   uploadURL: string;
   objectPath: string;
 }
+
+export type UploadSegmentPhotoBody = {
+  photo: Blob;
+  caption?: string;
+};

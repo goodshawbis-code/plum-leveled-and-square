@@ -33,11 +33,14 @@ import type {
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
   Segment,
+  SegmentPhoto,
   UpdateBidBody,
   UpdateMaterialBody,
   UpdateProjectBody,
   UpdateSegmentBody,
+  UpdateSegmentFieldBody,
   UpdateVendorBody,
+  UploadSegmentPhotoBody,
   Vendor,
   VendorBid,
   VendorBidDetail,
@@ -2250,6 +2253,274 @@ export const useDeleteVendor = <
   TContext
 > => {
   return useMutation(getDeleteVendorMutationOptions(options));
+};
+
+/**
+ * @summary Update field notes and completion status (foreman)
+ */
+export const getUpdateSegmentFieldUrl = (id: number) => {
+  return `/api/segments/${id}/field`;
+};
+
+export const updateSegmentField = async (
+  id: number,
+  updateSegmentFieldBody: UpdateSegmentFieldBody,
+  options?: RequestInit,
+): Promise<Segment> => {
+  return customFetch<Segment>(getUpdateSegmentFieldUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateSegmentFieldBody),
+  });
+};
+
+export const getUpdateSegmentFieldMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSegmentField>>,
+    TError,
+    { id: number; data: BodyType<UpdateSegmentFieldBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSegmentField>>,
+  TError,
+  { id: number; data: BodyType<UpdateSegmentFieldBody> },
+  TContext
+> => {
+  const mutationKey = ["updateSegmentField"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSegmentField>>,
+    { id: number; data: BodyType<UpdateSegmentFieldBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateSegmentField(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSegmentFieldMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSegmentField>>
+>;
+export type UpdateSegmentFieldMutationBody = BodyType<UpdateSegmentFieldBody>;
+export type UpdateSegmentFieldMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update field notes and completion status (foreman)
+ */
+export const useUpdateSegmentField = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSegmentField>>,
+    TError,
+    { id: number; data: BodyType<UpdateSegmentFieldBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateSegmentField>>,
+  TError,
+  { id: number; data: BodyType<UpdateSegmentFieldBody> },
+  TContext
+> => {
+  return useMutation(getUpdateSegmentFieldMutationOptions(options));
+};
+
+/**
+ * @summary List photos for a segment
+ */
+export const getListSegmentPhotosUrl = (segmentId: number) => {
+  return `/api/segments/${segmentId}/photos`;
+};
+
+export const listSegmentPhotos = async (
+  segmentId: number,
+  options?: RequestInit,
+): Promise<SegmentPhoto[]> => {
+  return customFetch<SegmentPhoto[]>(getListSegmentPhotosUrl(segmentId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSegmentPhotosQueryKey = (segmentId: number) => {
+  return [`/api/segments/${segmentId}/photos`] as const;
+};
+
+export const getListSegmentPhotosQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSegmentPhotos>>,
+  TError = ErrorType<unknown>,
+>(
+  segmentId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSegmentPhotos>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListSegmentPhotosQueryKey(segmentId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listSegmentPhotos>>
+  > = ({ signal }) =>
+    listSegmentPhotos(segmentId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!segmentId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSegmentPhotos>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListSegmentPhotosQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSegmentPhotos>>
+>;
+export type ListSegmentPhotosQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List photos for a segment
+ */
+
+export function useListSegmentPhotos<
+  TData = Awaited<ReturnType<typeof listSegmentPhotos>>,
+  TError = ErrorType<unknown>,
+>(
+  segmentId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSegmentPhotos>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListSegmentPhotosQueryOptions(segmentId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Upload a photo for a segment
+ */
+export const getUploadSegmentPhotoUrl = (segmentId: number) => {
+  return `/api/segments/${segmentId}/photos`;
+};
+
+export const uploadSegmentPhoto = async (
+  segmentId: number,
+  uploadSegmentPhotoBody: UploadSegmentPhotoBody,
+  options?: RequestInit,
+): Promise<SegmentPhoto> => {
+  const formData = new FormData();
+  formData.append(`photo`, uploadSegmentPhotoBody.photo);
+  if (uploadSegmentPhotoBody.caption !== undefined) {
+    formData.append(`caption`, uploadSegmentPhotoBody.caption);
+  }
+
+  return customFetch<SegmentPhoto>(getUploadSegmentPhotoUrl(segmentId), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const getUploadSegmentPhotoMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof uploadSegmentPhoto>>,
+    TError,
+    { segmentId: number; data: BodyType<UploadSegmentPhotoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof uploadSegmentPhoto>>,
+  TError,
+  { segmentId: number; data: BodyType<UploadSegmentPhotoBody> },
+  TContext
+> => {
+  const mutationKey = ["uploadSegmentPhoto"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof uploadSegmentPhoto>>,
+    { segmentId: number; data: BodyType<UploadSegmentPhotoBody> }
+  > = (props) => {
+    const { segmentId, data } = props ?? {};
+
+    return uploadSegmentPhoto(segmentId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UploadSegmentPhotoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof uploadSegmentPhoto>>
+>;
+export type UploadSegmentPhotoMutationBody = BodyType<UploadSegmentPhotoBody>;
+export type UploadSegmentPhotoMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Upload a photo for a segment
+ */
+export const useUploadSegmentPhoto = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof uploadSegmentPhoto>>,
+    TError,
+    { segmentId: number; data: BodyType<UploadSegmentPhotoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof uploadSegmentPhoto>>,
+  TError,
+  { segmentId: number; data: BodyType<UploadSegmentPhotoBody> },
+  TContext
+> => {
+  return useMutation(getUploadSegmentPhotoMutationOptions(options));
 };
 
 /**

@@ -54,5 +54,9 @@
     "typescript": "~5.9.2",
     "zod": "catalog:",
     "zod-validation-error": "^3.4.0"
+  },
+  "dependencies": {
+    "@tanstack/query-async-storage-persister": "^5.100.1",
+    "@tanstack/react-query-persist-client": "^5.100.1"
   }
 }
