@@ -125,16 +125,16 @@ export default function SegmentDetailScreen() {
 
   const baseUrl = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
   const bidList = bids ?? [];
-  const materialFromBid = bidList[0]?.material ?? null;
+  const selectedBid = bidList.find((b) => b.isSelected) ?? bidList[0] ?? null;
+  const materialFromBid = selectedBid?.material ?? null;
   const picUrl = materialFromBid?.pictureUrl
     ? materialFromBid.pictureUrl.startsWith("http")
       ? materialFromBid.pictureUrl
       : `${baseUrl}${materialFromBid.pictureUrl}`
     : null;
 
-  const totalCost = bidList
-    .filter((b) => b.isSelected)
-    .reduce((sum, b) => sum + b.unitPrice * b.quantity, 0);
+  const totalCost =
+    selectedBid != null ? selectedBid.unitPrice * selectedBid.quantity : 0;
 
   return (
     <ScrollView
@@ -183,35 +183,50 @@ export default function SegmentDetailScreen() {
           {materialFromBid.type ? <InfoRow label="Type" value={materialFromBid.type} /> : null}
           {materialFromBid.spec ? <InfoRow label="Spec" value={materialFromBid.spec} /> : null}
           {materialFromBid.unit ? <InfoRow label="Unit" value={materialFromBid.unit} /> : null}
+          {materialFromBid.description ? (
+            <InfoRow label="Description" value={materialFromBid.description} />
+          ) : null}
         </View>
       )}
 
-      {totalCost > 0 && (
+      {selectedBid && (
         <View
           style={[
-            styles.costBanner,
-            { backgroundColor: colors.primary },
+            styles.section,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.primary,
+              borderWidth: 2,
+            },
           ]}
         >
-          <Text style={[styles.costLabel, { color: colors.primaryForeground }]}>
-            SELECTED BID TOTAL
-          </Text>
-          <Text style={[styles.costValue, { color: colors.primaryForeground }]}>
-            ${totalCost.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Text>
+          <Text style={[styles.sectionTitle, { color: colors.primary }]}>ASSIGNED SUPPLIER</Text>
+          <InfoRow label="Vendor" value={selectedBid.vendor.name} />
+          {selectedBid.vendor.contactName ? (
+            <InfoRow label="Contact" value={selectedBid.vendor.contactName} />
+          ) : null}
+          {selectedBid.vendor.phone ? (
+            <InfoRow label="Phone" value={selectedBid.vendor.phone} />
+          ) : null}
+          {selectedBid.vendor.email ? (
+            <InfoRow label="Email" value={selectedBid.vendor.email} />
+          ) : null}
+          <InfoRow label="Qty" value={String(selectedBid.quantity)} />
+          <InfoRow
+            label="Unit Price"
+            value={`$${selectedBid.unitPrice.toFixed(2)}`}
+          />
+          <InfoRow
+            label="Subtotal"
+            value={`$${(selectedBid.unitPrice * selectedBid.quantity).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          />
+          {selectedBid.notes ? (
+            <InfoRow label="Field Notes" value={selectedBid.notes} />
+          ) : null}
         </View>
       )}
 
-      {bidList.length > 0 ? (
-        <View style={styles.bidsSection}>
-          <Text style={[styles.sectionTitle, { color: colors.mutedForeground, paddingHorizontal: 0 }]}>
-            VENDOR BIDS
-          </Text>
-          {bidList.map((bid) => (
-            <BidCard key={bid.id} bid={bid} isSelected={bid.isSelected} />
-          ))}
-        </View>
-      ) : (
+      {!selectedBid && bidList.length === 0 && (
         <View
           style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}
         >
@@ -221,6 +236,22 @@ export default function SegmentDetailScreen() {
               No vendor bids yet
             </Text>
           </View>
+        </View>
+      )}
+
+      {bidList.length > 1 && (
+        <View style={styles.bidsSection}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: colors.mutedForeground, paddingHorizontal: 0 },
+            ]}
+          >
+            ALL BIDS
+          </Text>
+          {bidList.map((bid) => (
+            <BidCard key={bid.id} bid={bid} isSelected={bid.isSelected} />
+          ))}
         </View>
       )}
     </ScrollView>
