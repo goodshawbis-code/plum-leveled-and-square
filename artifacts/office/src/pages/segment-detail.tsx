@@ -95,18 +95,30 @@ export default function SegmentDetail() {
   };
 
   const handleSelectBid = (bidId: number) => {
-    // We want to select this bid, which means potentially unselecting others.
-    // The backend should ideally handle unselecting others, but we can do it here by updating all.
-    // Or just update this one and assume the backend enforces logic, but to be safe we just mark this one as selected.
-    updateBid.mutate(
-      { id: bidId, data: { isSelected: true } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListBidsQueryKey(segmentId) });
-          toast({ title: "Bid selected for estimate" });
-        }
-      }
+    const currentBids = bids ?? [];
+    const toDeselect = currentBids.filter((b) => b.isSelected && b.id !== bidId);
+
+    const deselections = toDeselect.map(
+      (b) =>
+        new Promise<void>((resolve, reject) => {
+          updateBid.mutate(
+            { id: b.id, data: { isSelected: false } },
+            { onSuccess: () => resolve(), onError: reject }
+          );
+        })
     );
+
+    Promise.all(deselections).then(() => {
+      updateBid.mutate(
+        { id: bidId, data: { isSelected: true } },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: getListBidsQueryKey(segmentId) });
+            toast({ title: "Bid selected for estimate" });
+          }
+        }
+      );
+    });
   };
 
   const handleDeleteBid = (bidId: number) => {

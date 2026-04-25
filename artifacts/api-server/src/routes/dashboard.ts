@@ -35,8 +35,7 @@ router.get("/dashboard", async (req: Request, res: Response) => {
           createdAt: projectsTable.createdAt,
         })
         .from(projectsTable)
-        .orderBy(desc(projectsTable.createdAt))
-        .limit(10),
+        .orderBy(desc(projectsTable.createdAt)),
     ]);
 
     const projectIds = recentProjectRows.map((p) => p.id);
