@@ -104,15 +104,12 @@ export default function HomeScreen() {
     );
   }
 
-  const sorted = [...(projects ?? [])].sort((a, b) => {
-    const order: Record<Project["status"], number> = { active: 0, completed: 1, archived: 2 };
-    return order[a.status] - order[b.status];
-  });
+  const active = (projects ?? []).filter((p) => p.status === "active");
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
-        data={sorted}
+        data={active}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={[
           styles.list,
@@ -127,15 +124,15 @@ export default function HomeScreen() {
         }
         ListHeaderComponent={
           <Text style={[styles.sectionHeader, { color: colors.mutedForeground }]}>
-            {sorted.length} PROJECT{sorted.length !== 1 ? "S" : ""}
+            {active.length} ACTIVE PROJECT{active.length !== 1 ? "S" : ""}
           </Text>
         }
         ListEmptyComponent={
           <View style={styles.center}>
             <Feather name="folder" size={48} color={colors.mutedForeground} />
-            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No Projects</Text>
+            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No Active Projects</Text>
             <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-              Projects created in the office will appear here
+              Active projects from the office will appear here
             </Text>
           </View>
         }
@@ -145,7 +142,7 @@ export default function HomeScreen() {
             onPress={() => router.push({ pathname: "/project/[id]", params: { id: item.id } })}
           />
         )}
-        scrollEnabled={!!(sorted.length > 0)}
+        scrollEnabled={!!(active.length > 0)}
         showsVerticalScrollIndicator={false}
       />
     </View>
