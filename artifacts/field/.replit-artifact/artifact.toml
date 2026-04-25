@@ -1,6 +1,6 @@
 kind = "mobile"
   previewPath = "/field/"
-  title = "Field — Foreman App"
+  title = "Foreman Live"
   version = "1.0.0"
   id = "artifacts/field"
   router = "expo-domain"
