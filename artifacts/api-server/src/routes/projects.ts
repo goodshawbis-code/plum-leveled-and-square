@@ -1,7 +1,13 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { db, projectsTable } from "@workspace/db";
-import { CreateProjectBody, UpdateProjectBody } from "@workspace/api-zod";
+import {
+  CreateProjectBody,
+  UpdateProjectBody,
+  GetProjectParams,
+  UpdateProjectParams,
+  DeleteProjectParams,
+} from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
@@ -31,9 +37,13 @@ router.post("/projects", async (req: Request, res: Response) => {
 });
 
 router.get("/projects/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+  const params = GetProjectParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid project id" });
+    return;
+  }
   try {
-    const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, id));
+    const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, params.data.id));
     if (!project) {
       res.status(404).json({ error: "Project not found" });
       return;
@@ -46,17 +56,21 @@ router.get("/projects/:id", async (req: Request, res: Response) => {
 });
 
 router.patch("/projects/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  const parsed = UpdateProjectBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+  const params = UpdateProjectParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid project id" });
+    return;
+  }
+  const body = UpdateProjectBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
     return;
   }
   try {
     const [project] = await db
       .update(projectsTable)
-      .set(parsed.data)
-      .where(eq(projectsTable.id, id))
+      .set(body.data)
+      .where(eq(projectsTable.id, params.data.id))
       .returning();
     if (!project) {
       res.status(404).json({ error: "Project not found" });
@@ -70,9 +84,13 @@ router.patch("/projects/:id", async (req: Request, res: Response) => {
 });
 
 router.delete("/projects/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+  const params = DeleteProjectParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid project id" });
+    return;
+  }
   try {
-    await db.delete(projectsTable).where(eq(projectsTable.id, id));
+    await db.delete(projectsTable).where(eq(projectsTable.id, params.data.id));
     res.status(204).send();
   } catch (error) {
     req.log.error({ err: error }, "Failed to delete project");

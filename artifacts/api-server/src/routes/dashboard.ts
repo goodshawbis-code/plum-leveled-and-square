@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { eq, count, sql, desc } from "drizzle-orm";
+import { eq, count, sql, desc, inArray } from "drizzle-orm";
 import {
   db,
   projectsTable,
@@ -49,7 +49,7 @@ router.get("/dashboard", async (req: Request, res: Response) => {
               cnt: count(),
             })
             .from(blueprintsTable)
-            .where(sql`${blueprintsTable.projectId} = any(${sql.raw(`ARRAY[${projectIds.join(",")}]`)})`)
+            .where(inArray(blueprintsTable.projectId, projectIds))
             .groupBy(blueprintsTable.projectId)
         : [],
 
@@ -61,7 +61,7 @@ router.get("/dashboard", async (req: Request, res: Response) => {
             })
             .from(segmentsTable)
             .innerJoin(blueprintsTable, eq(segmentsTable.blueprintId, blueprintsTable.id))
-            .where(sql`${blueprintsTable.projectId} = any(${sql.raw(`ARRAY[${projectIds.join(",")}]`)})`)
+            .where(inArray(blueprintsTable.projectId, projectIds))
             .groupBy(blueprintsTable.projectId)
         : [],
 
@@ -74,7 +74,7 @@ router.get("/dashboard", async (req: Request, res: Response) => {
             .from(vendorBidsTable)
             .innerJoin(segmentsTable, eq(vendorBidsTable.segmentId, segmentsTable.id))
             .innerJoin(blueprintsTable, eq(segmentsTable.blueprintId, blueprintsTable.id))
-            .where(sql`${blueprintsTable.projectId} = any(${sql.raw(`ARRAY[${projectIds.join(",")}]`)})`)
+            .where(inArray(blueprintsTable.projectId, projectIds))
             .groupBy(blueprintsTable.projectId)
         : [],
     ]);

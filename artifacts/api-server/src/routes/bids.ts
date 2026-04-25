@@ -1,12 +1,23 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { db, vendorBidsTable, vendorsTable, materialsTable } from "@workspace/db";
-import { CreateBidBody, UpdateBidBody } from "@workspace/api-zod";
+import {
+  CreateBidBody,
+  UpdateBidBody,
+  ListBidsParams,
+  CreateBidParams,
+  UpdateBidParams,
+  DeleteBidParams,
+} from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
 router.get("/segments/:segmentId/bids", async (req: Request, res: Response) => {
-  const segmentId = Number(req.params.segmentId);
+  const params = ListBidsParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid segment id" });
+    return;
+  }
   try {
     const rows = await db
       .select({
@@ -39,7 +50,7 @@ router.get("/segments/:segmentId/bids", async (req: Request, res: Response) => {
       .from(vendorBidsTable)
       .innerJoin(vendorsTable, eq(vendorBidsTable.vendorId, vendorsTable.id))
       .innerJoin(materialsTable, eq(vendorBidsTable.materialId, materialsTable.id))
-      .where(eq(vendorBidsTable.segmentId, segmentId))
+      .where(eq(vendorBidsTable.segmentId, params.data.segmentId))
       .orderBy(vendorBidsTable.createdAt);
 
     const bids = rows.map((r) => ({
@@ -84,14 +95,21 @@ router.get("/segments/:segmentId/bids", async (req: Request, res: Response) => {
 });
 
 router.post("/segments/:segmentId/bids", async (req: Request, res: Response) => {
-  const segmentId = Number(req.params.segmentId);
-  const parsed = CreateBidBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+  const params = CreateBidParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid segment id" });
+    return;
+  }
+  const body = CreateBidBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
     return;
   }
   try {
-    const [bid] = await db.insert(vendorBidsTable).values({ ...parsed.data, segmentId }).returning();
+    const [bid] = await db
+      .insert(vendorBidsTable)
+      .values({ ...body.data, segmentId: params.data.segmentId })
+      .returning();
     res.status(201).json(bid);
   } catch (error) {
     req.log.error({ err: error }, "Failed to create bid");
@@ -100,17 +118,21 @@ router.post("/segments/:segmentId/bids", async (req: Request, res: Response) => 
 });
 
 router.patch("/bids/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  const parsed = UpdateBidBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+  const params = UpdateBidParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid bid id" });
+    return;
+  }
+  const body = UpdateBidBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
     return;
   }
   try {
     const [bid] = await db
       .update(vendorBidsTable)
-      .set(parsed.data)
-      .where(eq(vendorBidsTable.id, id))
+      .set(body.data)
+      .where(eq(vendorBidsTable.id, params.data.id))
       .returning();
     if (!bid) {
       res.status(404).json({ error: "Bid not found" });
@@ -124,9 +146,13 @@ router.patch("/bids/:id", async (req: Request, res: Response) => {
 });
 
 router.delete("/bids/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+  const params = DeleteBidParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid bid id" });
+    return;
+  }
   try {
-    await db.delete(vendorBidsTable).where(eq(vendorBidsTable.id, id));
+    await db.delete(vendorBidsTable).where(eq(vendorBidsTable.id, params.data.id));
     res.status(204).send();
   } catch (error) {
     req.log.error({ err: error }, "Failed to delete bid");

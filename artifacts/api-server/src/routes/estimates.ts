@@ -9,17 +9,17 @@ import {
   vendorsTable,
   materialsTable,
 } from "@workspace/db";
+import { GetProjectEstimateParams } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-/**
- * GET /projects/:id/estimate
- *
- * Compute a hard-bid estimate for a project by summing all selected vendor bids.
- * Returns ProjectEstimate with EstimateLineItem[] matching the OpenAPI schema.
- */
 router.get("/projects/:id/estimate", async (req: Request, res: Response) => {
-  const projectId = Number(req.params.id);
+  const params = GetProjectEstimateParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid project id" });
+    return;
+  }
+  const projectId = params.data.id;
 
   try {
     const [project] = await db

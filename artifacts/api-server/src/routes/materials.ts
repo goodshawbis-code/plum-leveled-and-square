@@ -1,7 +1,13 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { db, materialsTable } from "@workspace/db";
-import { CreateMaterialBody, UpdateMaterialBody } from "@workspace/api-zod";
+import {
+  CreateMaterialBody,
+  UpdateMaterialBody,
+  GetMaterialParams,
+  UpdateMaterialParams,
+  DeleteMaterialParams,
+} from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
@@ -31,9 +37,13 @@ router.post("/materials", async (req: Request, res: Response) => {
 });
 
 router.get("/materials/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+  const params = GetMaterialParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid material id" });
+    return;
+  }
   try {
-    const [material] = await db.select().from(materialsTable).where(eq(materialsTable.id, id));
+    const [material] = await db.select().from(materialsTable).where(eq(materialsTable.id, params.data.id));
     if (!material) {
       res.status(404).json({ error: "Material not found" });
       return;
@@ -46,17 +56,21 @@ router.get("/materials/:id", async (req: Request, res: Response) => {
 });
 
 router.patch("/materials/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  const parsed = UpdateMaterialBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+  const params = UpdateMaterialParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid material id" });
+    return;
+  }
+  const body = UpdateMaterialBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
     return;
   }
   try {
     const [material] = await db
       .update(materialsTable)
-      .set(parsed.data)
-      .where(eq(materialsTable.id, id))
+      .set(body.data)
+      .where(eq(materialsTable.id, params.data.id))
       .returning();
     if (!material) {
       res.status(404).json({ error: "Material not found" });
@@ -70,9 +84,13 @@ router.patch("/materials/:id", async (req: Request, res: Response) => {
 });
 
 router.delete("/materials/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+  const params = DeleteMaterialParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid material id" });
+    return;
+  }
   try {
-    await db.delete(materialsTable).where(eq(materialsTable.id, id));
+    await db.delete(materialsTable).where(eq(materialsTable.id, params.data.id));
     res.status(204).send();
   } catch (error) {
     req.log.error({ err: error }, "Failed to delete material");
