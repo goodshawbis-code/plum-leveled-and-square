@@ -134,7 +134,8 @@ export default function SegmentDetailScreen() {
   const baseUrl = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
   const bidList = bids ?? [];
   const selectedBid = bidList.find((b) => b.isSelected) ?? null;
-  const materialFromBid = selectedBid?.material ?? null;
+  const displayBid = selectedBid ?? bidList[0] ?? null;
+  const materialFromBid = displayBid?.material ?? null;
   const picUrl = materialFromBid?.pictureUrl
     ? materialFromBid.pictureUrl.startsWith("http")
       ? materialFromBid.pictureUrl
@@ -197,55 +198,50 @@ export default function SegmentDetailScreen() {
         </View>
       )}
 
-      {selectedBid && (
+      {displayBid && (
         <View
           style={[
             styles.section,
             {
               backgroundColor: colors.card,
-              borderColor: colors.primary,
-              borderWidth: 2,
+              borderColor: selectedBid ? colors.primary : colors.border,
+              borderWidth: selectedBid ? 2 : 1,
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.primary }]}>ASSIGNED SUPPLIER</Text>
-          <InfoRow label="Vendor" value={selectedBid.vendor.name} />
-          {selectedBid.vendor.contactName ? (
-            <InfoRow label="Contact" value={selectedBid.vendor.contactName} />
+          <Text style={[styles.sectionTitle, { color: selectedBid ? colors.primary : colors.mutedForeground }]}>
+            {selectedBid ? "ASSIGNED SUPPLIER" : "PENDING ASSIGNMENT"}
+          </Text>
+          <InfoRow label="Vendor" value={displayBid.vendor.name} />
+          {displayBid.vendor.contactName ? (
+            <InfoRow label="Contact" value={displayBid.vendor.contactName} />
           ) : null}
-          {selectedBid.vendor.phone ? (
-            <InfoRow label="Phone" value={selectedBid.vendor.phone} />
+          {displayBid.vendor.phone ? (
+            <InfoRow label="Phone" value={displayBid.vendor.phone} />
           ) : null}
-          {selectedBid.vendor.email ? (
-            <InfoRow label="Email" value={selectedBid.vendor.email} />
+          {displayBid.vendor.email ? (
+            <InfoRow label="Email" value={displayBid.vendor.email} />
           ) : null}
-          <InfoRow label="Qty" value={String(selectedBid.quantity)} />
-          <InfoRow
-            label="Unit Price"
-            value={`$${selectedBid.unitPrice.toFixed(2)}`}
-          />
+          <InfoRow label="Qty" value={String(displayBid.quantity)} />
+          <InfoRow label="Unit Price" value={`$${displayBid.unitPrice.toFixed(2)}`} />
           <InfoRow
             label="Subtotal"
-            value={`$${(selectedBid.unitPrice * selectedBid.quantity).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            value={`$${(displayBid.unitPrice * displayBid.quantity).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           />
-          {selectedBid.notes ? (
-            <InfoRow label="Field Notes" value={selectedBid.notes} />
+          {displayBid.notes ? (
+            <InfoRow label="Field Notes" value={displayBid.notes} />
           ) : null}
         </View>
       )}
 
-      {!selectedBid && (
+      {!displayBid && (
         <View
           style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}
         >
           <View style={styles.emptyBids}>
-            <Feather
-              name={bidList.length === 0 ? "dollar-sign" : "alert-circle"}
-              size={28}
-              color={colors.mutedForeground}
-            />
+            <Feather name="dollar-sign" size={28} color={colors.mutedForeground} />
             <Text style={[styles.emptyBidsText, { color: colors.mutedForeground }]}>
-              {bidList.length === 0 ? "No vendor bids yet" : "No supplier selected"}
+              No vendor bids yet
             </Text>
           </View>
         </View>

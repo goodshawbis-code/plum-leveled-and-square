@@ -68,8 +68,7 @@ function BlueprintWithSegments({
         style={{ width: displayWidth, height: displayHeight || displayWidth * 0.75 }}
         resizeMode="contain"
       />
-      {imgSize.width > 0 &&
-        segments.map((seg, idx) => {
+      {segments.map((seg, idx) => {
           const color = getSegmentColor(idx);
           const bpH = displayHeight || displayWidth * 0.75;
           const left = pctFraction(seg.x) * displayWidth;
