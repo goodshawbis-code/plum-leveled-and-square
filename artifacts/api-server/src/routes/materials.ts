@@ -1,6 +1,8 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
+import multer from "multer";
 import { db, materialsTable } from "@workspace/db";
+import { ObjectStorageService } from "../lib/objectStorage";
 import {
   CreateMaterialBody,
   UpdateMaterialBody,
@@ -10,6 +12,8 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+const storageService = new ObjectStorageService();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 router.get("/materials", async (req: Request, res: Response) => {
   try {
@@ -80,6 +84,67 @@ router.patch("/materials/:id", async (req: Request, res: Response) => {
   } catch (error) {
     req.log.error({ err: error }, "Failed to update material");
     res.status(500).json({ error: "Failed to update material" });
+  }
+});
+
+router.post(
+  "/materials/:id/photo",
+  upload.single("photo"),
+  async (req: Request, res: Response) => {
+    const params = GetMaterialParams.safeParse(req.params);
+    if (!params.success) {
+      res.status(400).json({ error: "Invalid material id" });
+      return;
+    }
+    if (!req.file) {
+      res.status(400).json({ error: "A photo file is required (field: photo)" });
+      return;
+    }
+    try {
+      const ext = req.file.originalname.split(".").pop() ?? "jpg";
+      const fileName = `material-${params.data.id}-${Date.now()}.${ext}`;
+      const { fileUrl } = await storageService.uploadPublicObject(
+        req.file.buffer,
+        fileName,
+        req.file.mimetype,
+      );
+      const [material] = await db
+        .update(materialsTable)
+        .set({ pictureUrl: fileUrl })
+        .where(eq(materialsTable.id, params.data.id))
+        .returning();
+      if (!material) {
+        res.status(404).json({ error: "Material not found" });
+        return;
+      }
+      res.json(material);
+    } catch (error) {
+      req.log.error({ err: error }, "Failed to upload material photo");
+      res.status(500).json({ error: "Failed to upload material photo" });
+    }
+  },
+);
+
+router.delete("/materials/:id/photo", async (req: Request, res: Response) => {
+  const params = GetMaterialParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid material id" });
+    return;
+  }
+  try {
+    const [material] = await db
+      .update(materialsTable)
+      .set({ pictureUrl: null })
+      .where(eq(materialsTable.id, params.data.id))
+      .returning();
+    if (!material) {
+      res.status(404).json({ error: "Material not found" });
+      return;
+    }
+    res.json(material);
+  } catch (error) {
+    req.log.error({ err: error }, "Failed to remove material photo");
+    res.status(500).json({ error: "Failed to remove material photo" });
   }
 });
 
