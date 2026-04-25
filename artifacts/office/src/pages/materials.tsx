@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useListMaterials, useCreateMaterial, useUpdateMaterial, useDeleteMaterial, getListMaterialsQueryKey } from "@workspace/api-client-react";
+import type { Material } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ export default function Materials() {
   const { toast } = useToast();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingMaterial, setEditingMaterial] = useState<any>(null);
+  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
 
   const form = useForm<MaterialFormValues>({
     resolver: zodResolver(materialSchema),

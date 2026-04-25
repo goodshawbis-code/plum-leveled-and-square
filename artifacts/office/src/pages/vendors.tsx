@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useListVendors, useCreateVendor, useUpdateVendor, useDeleteVendor, getListVendorsQueryKey } from "@workspace/api-client-react";
+import type { Vendor } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ export default function Vendors() {
   const { toast } = useToast();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingVendor, setEditingVendor] = useState<any>(null);
+  const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
 
   const form = useForm<VendorFormValues>({
     resolver: zodResolver(vendorSchema),

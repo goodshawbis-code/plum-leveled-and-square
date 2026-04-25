@@ -8,8 +8,10 @@ import {
   getListBlueprintsQueryKey,
   useListSegments,
   useCreateSegment,
+  useDeleteSegment,
   getListSegmentsQueryKey
 } from "@workspace/api-client-react";
+import type { Blueprint, CreateBlueprintBody } from "@workspace/api-client-react";
 import { useLocation, useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +21,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, FileImage, Image as ImageIcon, Calculator, ArrowLeft, Maximize } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Trash2, FileImage, Image as ImageIcon, Calculator, ArrowLeft, Maximize, Layers } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,7 +76,7 @@ export default function ProjectDetail() {
     formData.append("pageCount", "1");
 
     createBlueprint.mutate(
-      { projectId, data: formData as any },
+      { projectId, data: formData as unknown as CreateBlueprintBody },
       {
         onSuccess: (newBp) => {
           queryClient.invalidateQueries({ queryKey: getListBlueprintsQueryKey(projectId) });
@@ -208,16 +211,123 @@ export default function ProjectDetail() {
           )}
         </Card>
       </div>
+
+      {/* Segment List Panel */}
+      {selectedBlueprint && (
+        <SegmentListPanel
+          blueprintId={selectedBlueprint.id}
+          projectId={projectId}
+        />
+      )}
     </div>
   );
 }
 
-function BlueprintViewer({ blueprint, projectId }: { blueprint: any, projectId: number }) {
+function SegmentListPanel({ blueprintId, projectId }: { blueprintId: number; projectId: number }) {
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { data: segments, isLoading } = useListSegments(blueprintId, {
+    query: { enabled: !!blueprintId, queryKey: getListSegmentsQueryKey(blueprintId) }
+  });
+  const deleteSegmentMutation = useDeleteSegment();
+
+  const handleDelete = (segId: number) => {
+    if (!confirm("Delete this segment?")) return;
+    deleteSegmentMutation.mutate(
+      { id: segId },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListSegmentsQueryKey(blueprintId) });
+          toast({ title: "Segment deleted" });
+        }
+      }
+    );
+  };
+
+  const typeColors: Record<string, string> = {
+    wall: "bg-blue-100 text-blue-800",
+    grid: "bg-green-100 text-green-800",
+    elevation: "bg-amber-100 text-amber-800",
+    detail: "bg-purple-100 text-purple-800",
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Layers className="h-5 w-5" />
+          Segments
+        </CardTitle>
+        <CardDescription>Tagged regions for this blueprint. Click a row to view segment detail.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-2">
+            {[1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)}
+          </div>
+        ) : !segments || segments.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground text-sm border border-dashed rounded-md">
+            No segments tagged yet. Click and drag on the blueprint above to tag a region.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Label</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {segments.map(seg => (
+                <TableRow
+                  key={seg.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => setLocation(`/projects/${projectId}/segments/${seg.id}`)}
+                  data-testid={`segment-row-${seg.id}`}
+                >
+                  <TableCell className="font-medium">{seg.label}</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${typeColors[seg.type] ?? "bg-gray-100 text-gray-800"}`}>
+                      {seg.type}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm max-w-xs truncate">
+                    {seg.description ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => { e.stopPropagation(); handleDelete(seg.id); }}
+                      data-testid={`delete-segment-${seg.id}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function BlueprintViewer({ blueprint, projectId }: { blueprint: Blueprint, projectId: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const mediaWrapperRef = useRef<HTMLDivElement>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const isPdf = blueprint.fileName.toLowerCase().endsWith('.pdf') ||
+                blueprint.fileUrl.toLowerCase().endsWith('.pdf');
 
   const { data: segments } = useListSegments(blueprint.id, {
     query: { enabled: !!blueprint.id, queryKey: getListSegmentsQueryKey(blueprint.id) }
@@ -234,13 +344,14 @@ function BlueprintViewer({ blueprint, projectId }: { blueprint: any, projectId: 
     defaultValues: { label: "", type: "wall", description: "" },
   });
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    // Only left click
-    if (e.button !== 0) return;
-    if (!containerRef.current || !imgRef.current) return;
+  const getMediaEl = () => isPdf ? mediaWrapperRef.current : imgRef.current;
 
-    const rect = imgRef.current.getBoundingClientRect();
-    // Ensure we clicked inside the image
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    const mediaEl = getMediaEl();
+    if (!containerRef.current || !mediaEl) return;
+
+    const rect = mediaEl.getBoundingClientRect();
     if (
       e.clientX < rect.left || e.clientX > rect.right ||
       e.clientY < rect.top || e.clientY > rect.bottom
@@ -256,9 +367,10 @@ function BlueprintViewer({ blueprint, projectId }: { blueprint: any, projectId: 
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDrawing || !currentRect || !imgRef.current) return;
+    const mediaEl = getMediaEl();
+    if (!isDrawing || !currentRect || !mediaEl) return;
 
-    const rect = imgRef.current.getBoundingClientRect();
+    const rect = mediaEl.getBoundingClientRect();
     let currentX = ((e.clientX - rect.left) / rect.width) * 100;
     let currentY = ((e.clientY - rect.top) / rect.height) * 100;
 
@@ -341,15 +453,42 @@ function BlueprintViewer({ blueprint, projectId }: { blueprint: any, projectId: 
           onPointerUp={handlePointerUp}
           style={{ touchAction: 'none' }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            ref={imgRef}
-            src={blueprint.fileUrl} 
-            alt={blueprint.fileName}
-            className="block max-w-none shadow-sm"
-            style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none' }}
-            draggable={false}
-          />
+          {isPdf ? (
+            <div
+              ref={mediaWrapperRef}
+              className="w-full"
+              style={{ height: '70vh', minHeight: '400px' }}
+            >
+              <object
+                data={blueprint.fileUrl}
+                type="application/pdf"
+                className="w-full h-full"
+                style={{ pointerEvents: 'none', display: 'block' }}
+              >
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
+                  <p className="text-sm">PDF preview unavailable in this browser.</p>
+                  <a
+                    href={blueprint.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Open PDF
+                  </a>
+                </div>
+              </object>
+            </div>
+          ) : (
+            <img
+              ref={imgRef}
+              src={blueprint.fileUrl}
+              alt={blueprint.fileName}
+              className="block max-w-none shadow-sm"
+              style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none' }}
+              draggable={false}
+            />
+          )}
           
           {/* Existing Segments */}
           {segments?.map(seg => (
