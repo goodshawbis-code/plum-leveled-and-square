@@ -9,10 +9,12 @@ import bidsRouter from "./bids";
 import estimatesRouter from "./estimates";
 import dashboardRouter from "./dashboard";
 import storageRouter from "./storage";
+import stripeRouter from "./stripe";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(stripeRouter);
 router.use(projectsRouter);
 router.use(blueprintsRouter);
 router.use(segmentsRouter);

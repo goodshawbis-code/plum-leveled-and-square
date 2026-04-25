@@ -13,6 +13,7 @@ import ProjectNew from "@/pages/project-new";
 import ProjectDetail from "@/pages/project-detail";
 import ProjectEstimate from "@/pages/project-estimate";
 import SegmentDetail from "@/pages/segment-detail";
+import Subscribe from "@/pages/subscribe";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ function Router() {
     <Layout>
       <Switch>
         <Route path="/" component={Dashboard} />
+        <Route path="/subscribe" component={Subscribe} />
         <Route path="/projects" component={Projects} />
         <Route path="/projects/new" component={ProjectNew} />
         <Route path="/projects/:id" component={ProjectDetail} />
