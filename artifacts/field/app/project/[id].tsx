@@ -47,6 +47,13 @@ function getPinColor(index: number, done: boolean): string {
   return PIN_COLORS[index % PIN_COLORS.length];
 }
 
+function buildImageUrl(rawUrl: string): string {
+  const baseUrl = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
+  if (rawUrl.startsWith("http")) return rawUrl;
+  const fixedPath = rawUrl.startsWith("/storage/") ? `/api${rawUrl}` : rawUrl;
+  return `${baseUrl}${fixedPath}`;
+}
+
 function BlueprintWithPins({
   blueprint,
   segments,
@@ -58,29 +65,51 @@ function BlueprintWithPins({
 }) {
   const colors = useColors();
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
+  const [imgError, setImgError] = useState(false);
   const screenWidth = Dimensions.get("window").width - 32;
 
-  const baseUrl = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
-  const rawUrl = blueprint.fileUrl;
-  const imageUrl = rawUrl.startsWith("http") ? rawUrl : `${baseUrl}${rawUrl}`;
+  const imageUrl = buildImageUrl(blueprint.fileUrl);
+  const isPdf = blueprint.fileUrl.toLowerCase().endsWith(".pdf");
 
   const aspectRatio = imgSize.height > 0 ? imgSize.width / imgSize.height : 4 / 3;
   const displayWidth = screenWidth;
   const displayHeight = displayWidth / aspectRatio;
 
   useEffect(() => {
-    Image.getSize(imageUrl, (w, h) => setImgSize({ width: w, height: h }), () => {});
-  }, [imageUrl]);
+    if (!isPdf) {
+      Image.getSize(imageUrl, (w, h) => setImgSize({ width: w, height: h }), () => setImgError(true));
+    }
+  }, [imageUrl, isPdf]);
 
   const bpH = displayHeight || displayWidth * 0.75;
+  const showFallback = isPdf || imgError;
 
   return (
-    <View style={[styles.blueprintWrapper, { borderColor: colors.border }]}>
-      <Image
-        source={{ uri: imageUrl }}
-        style={{ width: displayWidth, height: bpH }}
-        resizeMode="contain"
-      />
+    <View
+      style={[
+        styles.blueprintWrapper,
+        { borderColor: colors.border, height: bpH },
+        showFallback && styles.blueprintFallback,
+      ]}
+    >
+      {showFallback ? (
+        <View style={styles.blueprintGridBg}>
+          {isPdf && (
+            <View style={styles.pdfBadge}>
+              <Feather name="file-text" size={16} color="rgba(255,255,255,0.7)" />
+              <Text style={styles.pdfBadgeText}>{blueprint.fileName}</Text>
+            </View>
+          )}
+        </View>
+      ) : (
+        <Image
+          source={{ uri: imageUrl }}
+          style={{ width: displayWidth, height: bpH }}
+          resizeMode="contain"
+          onError={() => setImgError(true)}
+        />
+      )}
+
       {segments.map((seg, idx) => {
         const left = pctFraction(seg.x) * displayWidth;
         const top = pctFraction(seg.y) * bpH;
@@ -91,22 +120,35 @@ function BlueprintWithPins({
         const done = !!seg.completedAt;
         const color = getPinColor(idx, done);
         return (
-          <TouchableOpacity
-            key={seg.id}
-            testID={`segment-overlay-${seg.id}`}
-            onPress={() => onSegmentPress(seg)}
-            style={[styles.pinWrapper, { left: pinX, top: pinY }]}
-            activeOpacity={0.75}
-          >
-            <View
+          <React.Fragment key={seg.id}>
+            {/* Segment area overlay — tappable rectangle */}
+            <TouchableOpacity
               style={[
-                styles.pin,
-                { backgroundColor: color },
+                styles.segmentOverlay,
+                {
+                  left,
+                  top,
+                  width,
+                  height,
+                  borderColor: color,
+                  backgroundColor: done ? "rgba(29,45,94,0.15)" : `${color}28`,
+                },
               ]}
+              onPress={() => onSegmentPress(seg)}
+              activeOpacity={0.7}
+            />
+            {/* Numbered pin centred on the overlay */}
+            <TouchableOpacity
+              testID={`segment-overlay-${seg.id}`}
+              style={[styles.pinWrapper, { left: pinX, top: pinY }]}
+              onPress={() => onSegmentPress(seg)}
+              activeOpacity={0.75}
             >
-              <Text style={styles.pinText}>{idx + 1}</Text>
-            </View>
-          </TouchableOpacity>
+              <View style={[styles.pin, { backgroundColor: color }]}>
+                <Text style={styles.pinText}>{idx + 1}</Text>
+              </View>
+            </TouchableOpacity>
+          </React.Fragment>
         );
       })}
     </View>
@@ -630,6 +672,36 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     position: "relative",
     borderWidth: 1,
+  },
+  blueprintFallback: {
+    backgroundColor: "#1a2e52",
+    borderColor: "#2a3e6a",
+  },
+  blueprintGridBg: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingBottom: 10,
+  },
+  pdfBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  pdfBadgeText: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    color: "rgba(255,255,255,0.7)",
+  },
+  segmentOverlay: {
+    position: "absolute",
+    borderWidth: 2,
+    borderRadius: 4,
   },
   pinWrapper: { position: "absolute", width: 32, height: 32 },
   pin: {
