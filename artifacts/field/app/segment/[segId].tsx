@@ -142,9 +142,6 @@ export default function SegmentDetailScreen() {
       : `${baseUrl}${materialFromBid.pictureUrl}`
     : null;
 
-  const totalCost =
-    selectedBid != null ? selectedBid.unitPrice * selectedBid.quantity : 0;
-
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}

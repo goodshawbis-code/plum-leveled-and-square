@@ -82,8 +82,9 @@ function serveLandingPage(req, res, landingPageTemplate, appName) {
 }
 
 function serveStaticFile(urlPath, res) {
-  const safePath = path.normalize(urlPath).replace(/^(\.\.(\/|\\|$))+/, "");
-  const filePath = path.join(STATIC_ROOT, safePath);
+  const normalized = path.normalize(urlPath).replace(/^(\.\.(\/|\\|$))+/, "");
+  const relative = normalized.replace(/^\/+/, "");
+  const filePath = path.join(STATIC_ROOT, relative);
 
   if (!filePath.startsWith(STATIC_ROOT)) {
     res.writeHead(403);
