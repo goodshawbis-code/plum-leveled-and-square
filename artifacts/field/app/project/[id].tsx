@@ -68,12 +68,6 @@ function BlueprintWithSegments({
         style={{ width: displayWidth, height: displayHeight || displayWidth * 0.75 }}
         resizeMode="contain"
       />
-      {/*
-       * Coordinate semantics: seg.x / seg.y / seg.width / seg.height are stored
-       * as PERCENTAGE values (0–100), where 100 represents the full blueprint dimension.
-       * Confirmed via API: e.g. x=10 means "10% from the left edge".
-       * We normalise to pixels by multiplying pct/100 by the rendered display size.
-       */}
       {imgSize.width > 0 &&
         segments.map((seg, idx) => {
           const color = getSegmentColor(idx);
