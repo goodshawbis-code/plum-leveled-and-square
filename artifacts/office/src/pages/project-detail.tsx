@@ -5,6 +5,7 @@ import {
   useListBlueprints, 
   useCreateBlueprint, 
   useDeleteBlueprint,
+  useDeleteProject,
   getListBlueprintsQueryKey,
   useListSegments,
   useCreateSegment,
@@ -55,9 +56,27 @@ export default function ProjectDetail() {
 
   const createBlueprint = useCreateBlueprint();
   const deleteBlueprint = useDeleteBlueprint();
+  const deleteProject = useDeleteProject();
 
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<number | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  const handleDeleteProject = () => {
+    if (!project) return;
+    if (!confirm(`Delete "${project.name}"? This will remove all blueprints, segments, and bids.`)) return;
+    deleteProject.mutate(
+      { id: projectId },
+      {
+        onSuccess: () => {
+          toast({ title: "Project deleted" });
+          setLocation("/");
+        },
+        onError: () => {
+          toast({ title: "Failed to delete project", variant: "destructive" });
+        },
+      }
+    );
+  };
 
   // Automatically select the first blueprint if none is selected
   useEffect(() => {
@@ -133,10 +152,23 @@ export default function ProjectDetail() {
             <p className="text-muted-foreground">{project.address}</p>
           </div>
         </div>
-        <Button onClick={() => setLocation(`/projects/${projectId}/estimate`)} data-testid="button-view-estimate">
-          <Calculator className="mr-2 h-4 w-4" />
-          View Estimate
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
+            onClick={handleDeleteProject}
+            disabled={deleteProject.isPending}
+            data-testid="button-delete-project"
+            title="Delete project"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button onClick={() => setLocation(`/projects/${projectId}/estimate`)} data-testid="button-view-estimate">
+            <Calculator className="mr-2 h-4 w-4" />
+            View Estimate
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
