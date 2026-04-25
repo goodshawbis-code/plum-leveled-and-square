@@ -49,7 +49,12 @@ router.post(
     const { projectId } = params.data;
     const fileName = req.file.originalname;
     const contentType = req.file.mimetype;
-    const pageCount = req.body.pageCount != null ? Number(req.body.pageCount) : 1;
+    const pageCountRaw = req.body.pageCount != null ? Number(req.body.pageCount) : 1;
+    if (!Number.isInteger(pageCountRaw) || pageCountRaw < 1) {
+      res.status(400).json({ error: "pageCount must be a positive integer" });
+      return;
+    }
+    const pageCount = pageCountRaw;
     try {
       const { fileUrl } = await storageService.uploadPublicObject(req.file.buffer, fileName, contentType);
       const [blueprint] = await db

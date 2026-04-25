@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { db, segmentsTable } from "@workspace/db";
+import { pgConstraintMessage } from "../lib/dbError";
 import {
   CreateSegmentBody,
   UpdateSegmentBody,
@@ -50,6 +51,11 @@ router.post("/blueprints/:blueprintId/segments", async (req: Request, res: Respo
       .returning();
     res.status(201).json(segment);
   } catch (error) {
+    const constraint = pgConstraintMessage(error);
+    if (constraint) {
+      res.status(400).json({ error: constraint });
+      return;
+    }
     req.log.error({ err: error }, "Failed to create segment");
     res.status(500).json({ error: "Failed to create segment" });
   }

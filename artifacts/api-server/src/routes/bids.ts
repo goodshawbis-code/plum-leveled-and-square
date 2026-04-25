@@ -9,6 +9,7 @@ import {
   UpdateBidParams,
   DeleteBidParams,
 } from "@workspace/api-zod";
+import { pgConstraintMessage } from "../lib/dbError";
 
 const router: IRouter = Router();
 
@@ -112,6 +113,11 @@ router.post("/segments/:segmentId/bids", async (req: Request, res: Response) => 
       .returning();
     res.status(201).json(bid);
   } catch (error) {
+    const constraint = pgConstraintMessage(error);
+    if (constraint) {
+      res.status(400).json({ error: constraint });
+      return;
+    }
     req.log.error({ err: error }, "Failed to create bid");
     res.status(500).json({ error: "Failed to create bid" });
   }
