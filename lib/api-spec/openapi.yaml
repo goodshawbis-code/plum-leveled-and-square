@@ -3,13 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Blueprint Builder Field Mate API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: projects
+    description: Project management
+  - name: blueprints
+    description: Blueprint file management
+  - name: segments
+    description: Blueprint segment tagging
+  - name: materials
+    description: Material catalog
+  - name: vendors
+    description: Vendor management
+  - name: bids
+    description: Vendor bid comparison
+  - name: estimates
+    description: Project estimates
+  - name: dashboard
+    description: Dashboard summary
+  - name: storage
+    description: Object storage
+
 paths:
   /healthz:
     get:
@@ -24,6 +43,650 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Projects ──────────────────────────────────────────────────────────────
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [projects]
+      summary: List all projects
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      operationId: createProject
+      tags: [projects]
+      summary: Create a project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectBody"
+      responses:
+        "201":
+          description: Created project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /projects/{id}:
+    get:
+      operationId: getProject
+      tags: [projects]
+      summary: Get a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateProject
+      tags: [projects]
+      summary: Update a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProjectBody"
+      responses:
+        "200":
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteProject
+      tags: [projects]
+      summary: Delete a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /projects/{id}/estimate:
+    get:
+      operationId: getProjectEstimate
+      tags: [estimates]
+      summary: Generate/get estimate for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Estimate with line items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectEstimate"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Blueprints ────────────────────────────────────────────────────────────
+  /projects/{projectId}/blueprints:
+    get:
+      operationId: listBlueprints
+      tags: [blueprints]
+      summary: List blueprints for a project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of blueprints
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Blueprint"
+    post:
+      operationId: createBlueprint
+      tags: [blueprints]
+      summary: Add a blueprint (after uploading file to storage)
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBlueprintBody"
+      responses:
+        "201":
+          description: Created blueprint
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Blueprint"
+
+  /blueprints/{id}:
+    get:
+      operationId: getBlueprint
+      tags: [blueprints]
+      summary: Get a blueprint
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Blueprint
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Blueprint"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteBlueprint
+      tags: [blueprints]
+      summary: Delete a blueprint
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Segments ──────────────────────────────────────────────────────────────
+  /blueprints/{blueprintId}/segments:
+    get:
+      operationId: listSegments
+      tags: [segments]
+      summary: List segments for a blueprint
+      parameters:
+        - name: blueprintId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of segments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Segment"
+    post:
+      operationId: createSegment
+      tags: [segments]
+      summary: Create a segment on a blueprint
+      parameters:
+        - name: blueprintId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSegmentBody"
+      responses:
+        "201":
+          description: Created segment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Segment"
+
+  /segments/{id}:
+    get:
+      operationId: getSegment
+      tags: [segments]
+      summary: Get a segment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Segment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Segment"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateSegment
+      tags: [segments]
+      summary: Update a segment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSegmentBody"
+      responses:
+        "200":
+          description: Updated segment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Segment"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteSegment
+      tags: [segments]
+      summary: Delete a segment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Materials ─────────────────────────────────────────────────────────────
+  /materials:
+    get:
+      operationId: listMaterials
+      tags: [materials]
+      summary: List all materials
+      responses:
+        "200":
+          description: List of materials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Material"
+    post:
+      operationId: createMaterial
+      tags: [materials]
+      summary: Create a material
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMaterialBody"
+      responses:
+        "201":
+          description: Created material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Material"
+
+  /materials/{id}:
+    get:
+      operationId: getMaterial
+      tags: [materials]
+      summary: Get a material
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Material"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateMaterial
+      tags: [materials]
+      summary: Update a material
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMaterialBody"
+      responses:
+        "200":
+          description: Updated material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Material"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteMaterial
+      tags: [materials]
+      summary: Delete a material
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Vendors ───────────────────────────────────────────────────────────────
+  /vendors:
+    get:
+      operationId: listVendors
+      tags: [vendors]
+      summary: List all vendors
+      responses:
+        "200":
+          description: List of vendors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Vendor"
+    post:
+      operationId: createVendor
+      tags: [vendors]
+      summary: Create a vendor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVendorBody"
+      responses:
+        "201":
+          description: Created vendor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+
+  /vendors/{id}:
+    get:
+      operationId: getVendor
+      tags: [vendors]
+      summary: Get a vendor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Vendor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateVendor
+      tags: [vendors]
+      summary: Update a vendor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVendorBody"
+      responses:
+        "200":
+          description: Updated vendor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteVendor
+      tags: [vendors]
+      summary: Delete a vendor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Vendor Bids ───────────────────────────────────────────────────────────
+  /segments/{segmentId}/bids:
+    get:
+      operationId: listBids
+      tags: [bids]
+      summary: List bids for a segment
+      parameters:
+        - name: segmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of bids
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VendorBidDetail"
+    post:
+      operationId: createBid
+      tags: [bids]
+      summary: Create a vendor bid for a segment
+      parameters:
+        - name: segmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBidBody"
+      responses:
+        "201":
+          description: Created bid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorBid"
+
+  /bids/{id}:
+    patch:
+      operationId: updateBid
+      tags: [bids]
+      summary: Update a bid
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBidBody"
+      responses:
+        "200":
+          description: Updated bid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorBid"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteBid
+      tags: [bids]
+      summary: Delete a bid
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Dashboard ─────────────────────────────────────────────────────────────
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  # ── Storage ───────────────────────────────────────────────────────────────
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a presigned upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestUploadUrlBody"
+      responses:
+        "200":
+          description: Presigned URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestUploadUrlResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +697,575 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    # ── Project ──────────────────────────────────────────────────────────────
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+          enum: [active, completed, archived]
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - address
+        - status
+        - notes
+        - createdAt
+        - updatedAt
+
+    CreateProjectBody:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+          enum: [active, completed, archived]
+        notes:
+          type: string
+      required:
+        - name
+
+    UpdateProjectBody:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+          enum: [active, completed, archived]
+        notes:
+          type: string
+
+    # ── Blueprint ─────────────────────────────────────────────────────────────
+    Blueprint:
+      type: object
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        fileUrl:
+          type: string
+        fileName:
+          type: string
+        pageCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - projectId
+        - fileUrl
+        - fileName
+        - pageCount
+        - createdAt
+        - updatedAt
+
+    CreateBlueprintBody:
+      type: object
+      properties:
+        fileUrl:
+          type: string
+        fileName:
+          type: string
+        pageCount:
+          type: integer
+      required:
+        - fileUrl
+        - fileName
+
+    # ── Segment ──────────────────────────────────────────────────────────────
+    Segment:
+      type: object
+      properties:
+        id:
+          type: integer
+        blueprintId:
+          type: integer
+        label:
+          type: string
+        type:
+          type: string
+          enum: [wall, grid, elevation, detail]
+        x:
+          type: number
+        y:
+          type: number
+        width:
+          type: number
+        height:
+          type: number
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - blueprintId
+        - label
+        - type
+        - x
+        - y
+        - width
+        - height
+        - description
+        - createdAt
+        - updatedAt
+
+    CreateSegmentBody:
+      type: object
+      properties:
+        label:
+          type: string
+        type:
+          type: string
+          enum: [wall, grid, elevation, detail]
+        x:
+          type: number
+        y:
+          type: number
+        width:
+          type: number
+        height:
+          type: number
+        description:
+          type: string
+      required:
+        - label
+
+    UpdateSegmentBody:
+      type: object
+      properties:
+        label:
+          type: string
+        type:
+          type: string
+          enum: [wall, grid, elevation, detail]
+        x:
+          type: number
+        y:
+          type: number
+        width:
+          type: number
+        height:
+          type: number
+        description:
+          type: string
+
+    # ── Material ─────────────────────────────────────────────────────────────
+    Material:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        spec:
+          type: string
+        description:
+          type: string
+        pictureUrl:
+          type: ["string", "null"]
+        unit:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - type
+        - spec
+        - description
+        - unit
+        - createdAt
+        - updatedAt
+
+    CreateMaterialBody:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        spec:
+          type: string
+        description:
+          type: string
+        pictureUrl:
+          type: ["string", "null"]
+        unit:
+          type: string
+      required:
+        - name
+
+    UpdateMaterialBody:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        spec:
+          type: string
+        description:
+          type: string
+        pictureUrl:
+          type: ["string", "null"]
+        unit:
+          type: string
+
+    # ── Vendor ───────────────────────────────────────────────────────────────
+    Vendor:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        contactName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - contactName
+        - phone
+        - email
+        - website
+        - createdAt
+        - updatedAt
+
+    CreateVendorBody:
+      type: object
+      properties:
+        name:
+          type: string
+        contactName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+      required:
+        - name
+
+    UpdateVendorBody:
+      type: object
+      properties:
+        name:
+          type: string
+        contactName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+
+    # ── VendorBid ─────────────────────────────────────────────────────────────
+    VendorBid:
+      type: object
+      properties:
+        id:
+          type: integer
+        segmentId:
+          type: integer
+        materialId:
+          type: integer
+        vendorId:
+          type: integer
+        unitPrice:
+          type: number
+        quantity:
+          type: number
+        notes:
+          type: string
+        isSelected:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - segmentId
+        - materialId
+        - vendorId
+        - unitPrice
+        - quantity
+        - notes
+        - isSelected
+        - createdAt
+        - updatedAt
+
+    VendorBidDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        segmentId:
+          type: integer
+        materialId:
+          type: integer
+        vendorId:
+          type: integer
+        unitPrice:
+          type: number
+        quantity:
+          type: number
+        notes:
+          type: string
+        isSelected:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        material:
+          $ref: "#/components/schemas/Material"
+        vendor:
+          $ref: "#/components/schemas/Vendor"
+      required:
+        - id
+        - segmentId
+        - materialId
+        - vendorId
+        - unitPrice
+        - quantity
+        - notes
+        - isSelected
+        - createdAt
+        - updatedAt
+        - material
+        - vendor
+
+    CreateBidBody:
+      type: object
+      properties:
+        materialId:
+          type: integer
+        vendorId:
+          type: integer
+        unitPrice:
+          type: number
+        quantity:
+          type: number
+        notes:
+          type: string
+        isSelected:
+          type: boolean
+      required:
+        - materialId
+        - vendorId
+        - unitPrice
+        - quantity
+
+    UpdateBidBody:
+      type: object
+      properties:
+        materialId:
+          type: integer
+        vendorId:
+          type: integer
+        unitPrice:
+          type: number
+        quantity:
+          type: number
+        notes:
+          type: string
+        isSelected:
+          type: boolean
+
+    # ── Estimate ──────────────────────────────────────────────────────────────
+    EstimateLineItem:
+      type: object
+      properties:
+        segmentId:
+          type: integer
+        segmentLabel:
+          type: string
+        materialName:
+          type: string
+        materialSpec:
+          type: string
+        vendorName:
+          type: string
+        unitPrice:
+          type: number
+        quantity:
+          type: number
+        unit:
+          type: string
+        lineTotal:
+          type: number
+        notes:
+          type: string
+      required:
+        - segmentId
+        - segmentLabel
+        - materialName
+        - materialSpec
+        - vendorName
+        - unitPrice
+        - quantity
+        - unit
+        - lineTotal
+        - notes
+
+    ProjectEstimate:
+      type: object
+      properties:
+        projectId:
+          type: integer
+        projectName:
+          type: string
+        totalCost:
+          type: number
+        lineItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/EstimateLineItem"
+        generatedAt:
+          type: string
+          format: date-time
+      required:
+        - projectId
+        - projectName
+        - totalCost
+        - lineItems
+        - generatedAt
+
+    # ── Dashboard ─────────────────────────────────────────────────────────────
+    DashboardProject:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+          enum: [active, completed, archived]
+        blueprintCount:
+          type: integer
+        segmentCount:
+          type: integer
+        estimatedTotal:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - address
+        - status
+        - blueprintCount
+        - segmentCount
+        - estimatedTotal
+        - createdAt
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalProjects:
+          type: integer
+        activeProjects:
+          type: integer
+        totalEstimatedValue:
+          type: number
+        recentProjects:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardProject"
+      required:
+        - totalProjects
+        - activeProjects
+        - totalEstimatedValue
+        - recentProjects
+
+    # ── Storage ───────────────────────────────────────────────────────────────
+    RequestUploadUrlBody:
+      type: object
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+        contentType:
+          type: string
+      required:
+        - name
+        - contentType
+
+    RequestUploadUrlResponse:
+      type: object
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string
+      required:
+        - uploadURL
+        - objectPath
