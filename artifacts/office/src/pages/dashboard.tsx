@@ -2,8 +2,23 @@ import { useGetDashboard, useListProjects } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Plus, Building2, HardHat, FileSpreadsheet, ArrowRight } from "lucide-react";
+import { Plus, Building2, HardHat, FileSpreadsheet, ArrowRight, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const BASE = import.meta.env.BASE_URL;
+
+const FOUNDING_MEMBERS = [
+  {
+    name: "C-911 Concrete, LLC",
+    logo: `${BASE}c911-concrete.png`,
+    description: "Commercial & residential concrete contractor",
+  },
+  {
+    name: "Brick Outdoor Living, Inc.",
+    logo: `${BASE}brick-outdoor.jpeg`,
+    description: "Outdoor masonry, patios & living spaces",
+  },
+];
 
 export default function Dashboard() {
   const { data: dashboard, isLoading } = useGetDashboard();
@@ -118,6 +133,36 @@ export default function Dashboard() {
             No projects found. Create one to get started.
           </div>
         )}
+      </div>
+
+      <div className="mt-12">
+        <div className="flex items-center gap-2 mb-5">
+          <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+          <h2 className="text-lg font-semibold tracking-tight">Founding Members</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
+          {FOUNDING_MEMBERS.map((member) => (
+            <Card key={member.name} className="border-amber-200 bg-amber-50/30 dark:bg-amber-950/10">
+              <CardContent className="p-5 flex flex-col gap-4">
+                <div className="h-16 flex items-center">
+                  <img
+                    src={member.logo}
+                    alt={member.name}
+                    className="max-h-16 max-w-full object-contain"
+                  />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">{member.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{member.description}</p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                  <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                  Founding Member · Lifetime Access
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );

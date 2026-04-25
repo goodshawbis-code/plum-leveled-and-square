@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { AppLogo } from "./AppLogo";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -52,7 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex h-14 items-center border-b px-4 lg:px-6">
           <Link href="/">
             <div className="flex items-center gap-2 font-bold text-lg text-primary cursor-pointer">
-              <FolderKanban className="h-5 w-5" />
+              <AppLogo size={28} />
               plumb level and Squared
             </div>
           </Link>
@@ -77,7 +78,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <SheetContent side="left" className="flex flex-col w-64 p-0">
               <div className="flex h-14 items-center border-b px-4">
                 <div className="flex items-center gap-2 font-bold text-lg text-primary">
-                  <FolderKanban className="h-5 w-5" />
+                  <AppLogo size={26} />
                   plumb level and Squared
                 </div>
               </div>
