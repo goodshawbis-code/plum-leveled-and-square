@@ -9,6 +9,10 @@ export default function Dashboard() {
   const { data: dashboard, isLoading } = useGetDashboard();
   const { data: projects, isLoading: isLoadingProjects } = useListProjects();
 
+  const estimateByProjectId = new Map(
+    (dashboard?.recentProjects ?? []).map((p) => [p.id, p.estimatedTotal])
+  );
+
   if (isLoading || isLoadingProjects) {
     return (
       <div className="space-y-6">
@@ -98,7 +102,7 @@ export default function Dashboard() {
                   {new Intl.NumberFormat("en-US", {
                     style: "currency",
                     currency: "USD",
-                  }).format(0)}
+                  }).format(estimateByProjectId.get(project.id) ?? 0)}
                 </span>
                 <Link href={`/projects/${project.id}`}>
                   <Button variant="ghost" size="sm" className="gap-1" data-testid={`btn-view-project-${project.id}`}>

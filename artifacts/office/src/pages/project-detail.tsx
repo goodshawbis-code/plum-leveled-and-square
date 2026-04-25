@@ -11,7 +11,7 @@ import {
   useDeleteSegment,
   getListSegmentsQueryKey
 } from "@workspace/api-client-react";
-import type { Blueprint, CreateBlueprintBody } from "@workspace/api-client-react";
+import type { Blueprint } from "@workspace/api-client-react";
 import { useLocation, useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,12 +71,8 @@ export default function ProjectDetail() {
     if (!file) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("pageCount", "1");
-
     createBlueprint.mutate(
-      { projectId, data: formData as unknown as CreateBlueprintBody },
+      { projectId, data: { file, pageCount: 1 } },
       {
         onSuccess: (newBp) => {
           queryClient.invalidateQueries({ queryKey: getListBlueprintsQueryKey(projectId) });
