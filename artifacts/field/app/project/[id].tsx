@@ -20,6 +20,7 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { pctFraction } from "@/utils/coords";
 
 const SEGMENT_COLORS = [
   "#fc6703",
@@ -76,12 +77,11 @@ function BlueprintWithSegments({
       {imgSize.width > 0 &&
         segments.map((seg, idx) => {
           const color = getSegmentColor(idx);
-          const pctToX = (pct: number) => (pct / 100) * displayWidth;
-          const pctToY = (pct: number) => (pct / 100) * (displayHeight || displayWidth * 0.75);
-          const left = pctToX(seg.x);
-          const top = pctToY(seg.y);
-          const width = pctToX(seg.width);
-          const height = pctToY(seg.height);
+          const bpH = displayHeight || displayWidth * 0.75;
+          const left = pctFraction(seg.x) * displayWidth;
+          const top = pctFraction(seg.y) * bpH;
+          const width = pctFraction(seg.width) * displayWidth;
+          const height = pctFraction(seg.height) * bpH;
           return (
             <TouchableOpacity
               key={seg.id}

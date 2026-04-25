@@ -41,6 +41,7 @@ function RootLayoutNav() {
     >
       <Stack.Screen name="index" options={{ title: "Field Mate" }} />
       <Stack.Screen name="project/[id]" options={{ title: "Project" }} />
+      <Stack.Screen name="segment-list/[bpId]" options={{ title: "Segments" }} />
       <Stack.Screen name="segment/[segId]" options={{ title: "Segment" }} />
     </Stack>
   );
