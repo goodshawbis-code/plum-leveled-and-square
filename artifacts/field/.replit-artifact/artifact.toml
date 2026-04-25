@@ -1,6 +1,6 @@
 kind = "mobile"
   previewPath = "/field/"
-  title = "plumb level and Squared"
+  title = "Field — Foreman App"
   version = "1.0.0"
   id = "artifacts/field"
   router = "expo-domain"
