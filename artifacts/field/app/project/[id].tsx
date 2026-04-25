@@ -296,14 +296,14 @@ export default function ProjectDetailScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       title: project?.name ?? "Project",
-      headerRight: activeBp
+      headerRight: blueprints && blueprints.length > 0
         ? () => (
             <Pressable
               testID="open-segment-list"
               onPress={() =>
                 router.push({
-                  pathname: "/segment-list/[bpId]",
-                  params: { bpId: activeBp.id },
+                  pathname: "/segment-list/[projId]",
+                  params: { projId: projectId },
                 })
               }
               style={{ marginRight: 4 }}
@@ -313,7 +313,7 @@ export default function ProjectDetailScreen() {
           )
         : undefined,
     });
-  }, [project, activeBp, navigation, router, colors.primary]);
+  }, [project, blueprints, navigation, router, colors.primary, projectId]);
 
   const topPad = Platform.OS === "web" ? 67 : 0;
 
