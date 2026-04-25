@@ -1,31 +1,32 @@
 kind = "web"
-previewPath = "/"
-title = "Blueprint Builder — GC Estimator"
-version = "1.0.0"
-id = "artifacts/office"
-router = "path"
+  previewPath = "/"
+  title = "plumb level and Squared"
+  version = "1.0.0"
+  id = "artifacts/office"
+  router = "path"
 
-[[integratedSkills]]
-name = "react-vite"
-version = "1.0.0"
+  [[integratedSkills]]
+  name = "react-vite"
+  version = "1.0.0"
 
-[[services]]
-name = "web"
-paths = [ "/" ]
-localPort = 26092
+  [[services]]
+  name = "web"
+  paths = [ "/" ]
+  localPort = 26092
 
-[services.development]
-run = "pnpm --filter @workspace/office run dev"
+  [services.development]
+  run = "pnpm --filter @workspace/office run dev"
 
-[services.production]
-build = [ "pnpm", "--filter", "@workspace/office", "run", "build" ]
-publicDir = "artifacts/office/dist/public"
-serve = "static"
+  [services.production]
+  build = [ "pnpm", "--filter", "@workspace/office", "run", "build" ]
+  publicDir = "artifacts/office/dist/public"
+  serve = "static"
 
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+  [[services.production.rewrites]]
+  from = "/*"
+  to = "/index.html"
 
-[services.env]
-PORT = "26092"
-BASE_PATH = "/"
+  [services.env]
+  PORT = "26092"
+  BASE_PATH = "/"
+  

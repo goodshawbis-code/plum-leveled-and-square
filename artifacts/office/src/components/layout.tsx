@@ -53,7 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <Link href="/">
             <div className="flex items-center gap-2 font-bold text-lg text-primary cursor-pointer">
               <FolderKanban className="h-5 w-5" />
-              Field Mate
+              plumb level and Squared
             </div>
           </Link>
         </div>
@@ -78,7 +78,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="flex h-14 items-center border-b px-4">
                 <div className="flex items-center gap-2 font-bold text-lg text-primary">
                   <FolderKanban className="h-5 w-5" />
-                  Field Mate
+                  plumb level and Squared
                 </div>
               </div>
               <div className="flex-1 overflow-auto py-4">
@@ -88,7 +88,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </SheetContent>
           </Sheet>
-          <div className="font-bold text-primary flex-1">Field Mate</div>
+          <div className="font-bold text-primary flex-1">plumb level and Squared</div>
         </header>
 
         {/* Main Content */}

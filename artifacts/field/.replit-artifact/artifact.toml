@@ -1,27 +1,28 @@
 kind = "mobile"
-previewPath = "/field/"
-title = "Field Mate — Foreman App"
-version = "1.0.0"
-id = "artifacts/field"
-router = "expo-domain"
+  previewPath = "/field/"
+  title = "plumb level and Squared"
+  version = "1.0.0"
+  id = "artifacts/field"
+  router = "expo-domain"
 
-[[integratedSkills]]
-name = "expo"
-version = "1.0.0"
+  [[integratedSkills]]
+  name = "expo"
+  version = "1.0.0"
 
-[[services]]
-ensurePreviewReachable = "/status"
-name = "expo"
-paths = [ "/field/" ]
-localPort = 22644
+  [[services]]
+  ensurePreviewReachable = "/status"
+  name = "expo"
+  paths = [ "/field/" ]
+  localPort = 22644
 
-[services.development]
-run = "pnpm --filter @workspace/field run dev"
+  [services.development]
+  run = "pnpm --filter @workspace/field run dev"
 
-[services.production]
-build = [ "pnpm", "--filter", "@workspace/field", "run", "build" ]
-run = [ "pnpm", "--filter", "@workspace/field", "run", "serve" ]
+  [services.production]
+  build = [ "pnpm", "--filter", "@workspace/field", "run", "build" ]
+  run = [ "pnpm", "--filter", "@workspace/field", "run", "serve" ]
 
-[services.env]
-PORT = "22644"
-BASE_PATH = "/field/"
+  [services.env]
+  PORT = "22644"
+  BASE_PATH = "/field/"
+  
