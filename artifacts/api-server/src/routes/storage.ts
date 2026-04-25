@@ -14,8 +14,10 @@ const objectStorageService = new ObjectStorageService();
 const staticDir = join(process.cwd(), "static");
 
 router.use("/storage/static", express.static(staticDir, {
-  maxAge: "7d",
+  maxAge: 0,
+  etag: false,
   setHeaders: (res) => {
+    res.setHeader("Cache-Control", "no-store");
     res.setHeader("Access-Control-Allow-Origin", "*");
   },
 }));
