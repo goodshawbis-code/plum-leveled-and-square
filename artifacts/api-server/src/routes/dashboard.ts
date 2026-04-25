@@ -1,12 +1,10 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { eq, count, sql } from "drizzle-orm";
+import { eq, count, sql, desc } from "drizzle-orm";
 import {
   db,
   projectsTable,
   blueprintsTable,
   segmentsTable,
-  vendorsTable,
-  materialsTable,
   vendorBidsTable,
 } from "@workspace/db";
 
@@ -15,49 +13,95 @@ const router: IRouter = Router();
 /**
  * GET /dashboard
  *
- * Aggregate summary statistics for the dashboard view.
+ * Returns DashboardSummary as specified in the OpenAPI contract:
+ * { totalProjects, activeProjects, totalEstimatedValue, recentProjects }
+ * where each recentProject includes blueprintCount, segmentCount, estimatedTotal.
  */
 router.get("/dashboard", async (req: Request, res: Response) => {
   try {
-    const [[projectStats], [blueprintCount], [segmentCount], [vendorCount], [materialCount], [bidStats]] =
-      await Promise.all([
-        db
-          .select({
-            total: count(),
-            active: sql<number>`count(*) filter (where ${projectsTable.status} = 'active')`,
-            completed: sql<number>`count(*) filter (where ${projectsTable.status} = 'completed')`,
-            archived: sql<number>`count(*) filter (where ${projectsTable.status} = 'archived')`,
-          })
-          .from(projectsTable),
-        db.select({ total: count() }).from(blueprintsTable),
-        db.select({ total: count() }).from(segmentsTable),
-        db.select({ total: count() }).from(vendorsTable),
-        db.select({ total: count() }).from(materialsTable),
-        db
-          .select({
-            total: count(),
-            selected: sql<number>`count(*) filter (where ${vendorBidsTable.isSelected} = true)`,
-            totalValue: sql<number>`sum(${vendorBidsTable.unitPrice} * ${vendorBidsTable.quantity})`,
-          })
-          .from(vendorBidsTable),
-      ]);
+    const [[totals], recentProjectRows] = await Promise.all([
+      db
+        .select({
+          totalProjects: count(),
+          activeProjects: sql<number>`count(*) filter (where ${projectsTable.status} = 'active')`,
+        })
+        .from(projectsTable),
+
+      db
+        .select({
+          id: projectsTable.id,
+          name: projectsTable.name,
+          address: projectsTable.address,
+          status: projectsTable.status,
+          createdAt: projectsTable.createdAt,
+        })
+        .from(projectsTable)
+        .orderBy(desc(projectsTable.createdAt))
+        .limit(10),
+    ]);
+
+    const projectIds = recentProjectRows.map((p) => p.id);
+
+    const [blueprintCounts, segmentCounts, bidTotals] = await Promise.all([
+      projectIds.length > 0
+        ? db
+            .select({
+              projectId: blueprintsTable.projectId,
+              cnt: count(),
+            })
+            .from(blueprintsTable)
+            .where(sql`${blueprintsTable.projectId} = any(${sql.raw(`ARRAY[${projectIds.join(",")}]`)})`)
+            .groupBy(blueprintsTable.projectId)
+        : [],
+
+      projectIds.length > 0
+        ? db
+            .select({
+              projectId: blueprintsTable.projectId,
+              cnt: count(),
+            })
+            .from(segmentsTable)
+            .innerJoin(blueprintsTable, eq(segmentsTable.blueprintId, blueprintsTable.id))
+            .where(sql`${blueprintsTable.projectId} = any(${sql.raw(`ARRAY[${projectIds.join(",")}]`)})`)
+            .groupBy(blueprintsTable.projectId)
+        : [],
+
+      projectIds.length > 0
+        ? db
+            .select({
+              projectId: blueprintsTable.projectId,
+              total: sql<number>`sum(${vendorBidsTable.unitPrice} * ${vendorBidsTable.quantity}) filter (where ${vendorBidsTable.isSelected} = true)`,
+            })
+            .from(vendorBidsTable)
+            .innerJoin(segmentsTable, eq(vendorBidsTable.segmentId, segmentsTable.id))
+            .innerJoin(blueprintsTable, eq(segmentsTable.blueprintId, blueprintsTable.id))
+            .where(sql`${blueprintsTable.projectId} = any(${sql.raw(`ARRAY[${projectIds.join(",")}]`)})`)
+            .groupBy(blueprintsTable.projectId)
+        : [],
+    ]);
+
+    const bpMap = new Map(blueprintCounts.map((r) => [r.projectId, Number(r.cnt)]));
+    const segMap = new Map(segmentCounts.map((r) => [r.projectId, Number(r.cnt)]));
+    const bidMap = new Map(bidTotals.map((r) => [r.projectId, Number(r.total) || 0]));
+
+    const recentProjects = recentProjectRows.map((p) => ({
+      id: p.id,
+      name: p.name,
+      address: p.address,
+      status: p.status,
+      blueprintCount: bpMap.get(p.id) ?? 0,
+      segmentCount: segMap.get(p.id) ?? 0,
+      estimatedTotal: bidMap.get(p.id) ?? 0,
+      createdAt: p.createdAt,
+    }));
+
+    const totalEstimatedValue = recentProjects.reduce((sum, p) => sum + p.estimatedTotal, 0);
 
     res.json({
-      projects: {
-        total: projectStats?.total ?? 0,
-        active: projectStats?.active ?? 0,
-        completed: projectStats?.completed ?? 0,
-        archived: projectStats?.archived ?? 0,
-      },
-      blueprints: blueprintCount?.total ?? 0,
-      segments: segmentCount?.total ?? 0,
-      vendors: vendorCount?.total ?? 0,
-      materials: materialCount?.total ?? 0,
-      bids: {
-        total: bidStats?.total ?? 0,
-        selected: bidStats?.selected ?? 0,
-        totalSelectedValue: bidStats?.totalValue ?? 0,
-      },
+      totalProjects: Number(totals?.totalProjects ?? 0),
+      activeProjects: Number(totals?.activeProjects ?? 0),
+      totalEstimatedValue,
+      recentProjects,
     });
   } catch (error) {
     req.log.error({ err: error }, "Failed to get dashboard");

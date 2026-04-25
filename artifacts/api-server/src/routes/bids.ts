@@ -10,10 +10,16 @@ import {
 
 const router: IRouter = Router();
 
+/**
+ * GET /segments/:segmentId/bids
+ *
+ * Returns VendorBidDetail[] — each bid includes fully-nested `material`
+ * and `vendor` objects as specified in the OpenAPI schema.
+ */
 router.get("/segments/:segmentId/bids", async (req: Request, res: Response) => {
   const segmentId = Number(req.params.segmentId);
   try {
-    const bids = await db
+    const rows = await db
       .select({
         id: vendorBidsTable.id,
         segmentId: vendorBidsTable.segmentId,
@@ -25,16 +31,62 @@ router.get("/segments/:segmentId/bids", async (req: Request, res: Response) => {
         isSelected: vendorBidsTable.isSelected,
         createdAt: vendorBidsTable.createdAt,
         updatedAt: vendorBidsTable.updatedAt,
-        vendorName: vendorsTable.name,
-        vendorEmail: vendorsTable.email,
         materialName: materialsTable.name,
+        materialType: materialsTable.type,
+        materialSpec: materialsTable.spec,
+        materialDescription: materialsTable.description,
+        materialPictureUrl: materialsTable.pictureUrl,
         materialUnit: materialsTable.unit,
+        materialCreatedAt: materialsTable.createdAt,
+        materialUpdatedAt: materialsTable.updatedAt,
+        vendorName: vendorsTable.name,
+        vendorContactName: vendorsTable.contactName,
+        vendorPhone: vendorsTable.phone,
+        vendorEmail: vendorsTable.email,
+        vendorWebsite: vendorsTable.website,
+        vendorCreatedAt: vendorsTable.createdAt,
+        vendorUpdatedAt: vendorsTable.updatedAt,
       })
       .from(vendorBidsTable)
       .leftJoin(vendorsTable, eq(vendorBidsTable.vendorId, vendorsTable.id))
       .leftJoin(materialsTable, eq(vendorBidsTable.materialId, materialsTable.id))
       .where(eq(vendorBidsTable.segmentId, segmentId))
       .orderBy(vendorBidsTable.createdAt);
+
+    const bids = rows.map((r) => ({
+      id: r.id,
+      segmentId: r.segmentId,
+      materialId: r.materialId,
+      vendorId: r.vendorId,
+      unitPrice: r.unitPrice,
+      quantity: r.quantity,
+      notes: r.notes,
+      isSelected: r.isSelected,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      material: {
+        id: r.materialId,
+        name: r.materialName ?? "",
+        type: r.materialType ?? "",
+        spec: r.materialSpec ?? "",
+        description: r.materialDescription ?? "",
+        pictureUrl: r.materialPictureUrl ?? null,
+        unit: r.materialUnit ?? "",
+        createdAt: r.materialCreatedAt ?? new Date(),
+        updatedAt: r.materialUpdatedAt ?? new Date(),
+      },
+      vendor: {
+        id: r.vendorId,
+        name: r.vendorName ?? "",
+        contactName: r.vendorContactName ?? "",
+        phone: r.vendorPhone ?? "",
+        email: r.vendorEmail ?? "",
+        website: r.vendorWebsite ?? "",
+        createdAt: r.vendorCreatedAt ?? new Date(),
+        updatedAt: r.vendorUpdatedAt ?? new Date(),
+      },
+    }));
+
     res.json(bids);
   } catch (error) {
     req.log.error({ err: error }, "Failed to list bids");

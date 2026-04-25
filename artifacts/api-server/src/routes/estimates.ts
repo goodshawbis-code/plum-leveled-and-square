@@ -8,7 +8,6 @@ import {
   vendorBidsTable,
   vendorsTable,
   materialsTable,
-  estimatesTable,
 } from "@workspace/db";
 
 const router: IRouter = Router();
@@ -16,9 +15,8 @@ const router: IRouter = Router();
 /**
  * GET /projects/:id/estimate
  *
- * Compute a hard-bid estimate for a project by summing all selected
- * vendor bids across all segments of all blueprints in the project.
- * Returns an estimate record and per-segment line items.
+ * Compute a hard-bid estimate for a project by summing all selected vendor bids.
+ * Returns ProjectEstimate with EstimateLineItem[] matching the OpenAPI schema.
  */
 router.get("/projects/:id/estimate", async (req: Request, res: Response) => {
   const projectId = Number(req.params.id);
@@ -34,18 +32,13 @@ router.get("/projects/:id/estimate", async (req: Request, res: Response) => {
       return;
     }
 
-    const lineItems = await db
+    const rows = await db
       .select({
         segmentId: segmentsTable.id,
         segmentLabel: segmentsTable.label,
-        segmentType: segmentsTable.type,
-        blueprintId: blueprintsTable.id,
-        blueprintFileName: blueprintsTable.fileName,
-        bidId: vendorBidsTable.id,
-        vendorId: vendorsTable.id,
         vendorName: vendorsTable.name,
-        materialId: materialsTable.id,
         materialName: materialsTable.name,
+        materialSpec: materialsTable.spec,
         materialUnit: materialsTable.unit,
         unitPrice: vendorBidsTable.unitPrice,
         quantity: vendorBidsTable.quantity,
@@ -60,20 +53,26 @@ router.get("/projects/:id/estimate", async (req: Request, res: Response) => {
       .innerJoin(materialsTable, eq(vendorBidsTable.materialId, materialsTable.id))
       .where(and(eq(projectsTable.id, projectId), eq(vendorBidsTable.isSelected, true)));
 
-    const totalCost = lineItems.reduce((sum: number, item) => sum + (Number(item.lineTotal) || 0), 0);
+    const lineItems = rows.map((r) => ({
+      segmentId: r.segmentId,
+      segmentLabel: r.segmentLabel,
+      materialName: r.materialName,
+      materialSpec: r.materialSpec,
+      vendorName: r.vendorName,
+      unitPrice: r.unitPrice,
+      quantity: r.quantity,
+      unit: r.materialUnit,
+      lineTotal: Number(r.lineTotal) || 0,
+      notes: r.notes,
+    }));
 
-    const [estimate] = await db
-      .insert(estimatesTable)
-      .values({ projectId, totalCost, status: "draft" })
-      .onConflictDoNothing()
-      .returning();
+    const totalCost = lineItems.reduce((sum: number, item) => sum + item.lineTotal, 0);
 
     res.json({
       projectId,
       projectName: project.name,
       totalCost,
       lineItems,
-      estimateId: estimate?.id ?? null,
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
