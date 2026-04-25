@@ -1,6 +1,6 @@
 kind = "web"
   previewPath = "/"
-  title = "Office — GC Estimator"
+  title = "plumb level and Squared"
   version = "1.0.0"
   id = "artifacts/office"
   router = "path"
