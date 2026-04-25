@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
-import { db, vendorsTable, insertVendorSchema } from "@workspace/db";
+import { db, vendorsTable } from "@workspace/db";
+import { CreateVendorBody, UpdateVendorBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
@@ -15,7 +16,7 @@ router.get("/vendors", async (req: Request, res: Response) => {
 });
 
 router.post("/vendors", async (req: Request, res: Response) => {
-  const parsed = insertVendorSchema.safeParse(req.body);
+  const parsed = CreateVendorBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
@@ -46,7 +47,7 @@ router.get("/vendors/:id", async (req: Request, res: Response) => {
 
 router.patch("/vendors/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
-  const parsed = insertVendorSchema.partial().safeParse(req.body);
+  const parsed = UpdateVendorBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;

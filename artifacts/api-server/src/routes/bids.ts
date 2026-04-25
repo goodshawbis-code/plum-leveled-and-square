@@ -1,21 +1,10 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
-import {
-  db,
-  vendorBidsTable,
-  vendorsTable,
-  materialsTable,
-  insertVendorBidSchema,
-} from "@workspace/db";
+import { db, vendorBidsTable, vendorsTable, materialsTable } from "@workspace/db";
+import { CreateBidBody, UpdateBidBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-/**
- * GET /segments/:segmentId/bids
- *
- * Returns VendorBidDetail[] — each bid includes fully-nested `material`
- * and `vendor` objects as specified in the OpenAPI schema.
- */
 router.get("/segments/:segmentId/bids", async (req: Request, res: Response) => {
   const segmentId = Number(req.params.segmentId);
   try {
@@ -48,8 +37,8 @@ router.get("/segments/:segmentId/bids", async (req: Request, res: Response) => {
         vendorUpdatedAt: vendorsTable.updatedAt,
       })
       .from(vendorBidsTable)
-      .leftJoin(vendorsTable, eq(vendorBidsTable.vendorId, vendorsTable.id))
-      .leftJoin(materialsTable, eq(vendorBidsTable.materialId, materialsTable.id))
+      .innerJoin(vendorsTable, eq(vendorBidsTable.vendorId, vendorsTable.id))
+      .innerJoin(materialsTable, eq(vendorBidsTable.materialId, materialsTable.id))
       .where(eq(vendorBidsTable.segmentId, segmentId))
       .orderBy(vendorBidsTable.createdAt);
 
@@ -66,24 +55,24 @@ router.get("/segments/:segmentId/bids", async (req: Request, res: Response) => {
       updatedAt: r.updatedAt,
       material: {
         id: r.materialId,
-        name: r.materialName ?? "",
-        type: r.materialType ?? "",
-        spec: r.materialSpec ?? "",
-        description: r.materialDescription ?? "",
-        pictureUrl: r.materialPictureUrl ?? null,
-        unit: r.materialUnit ?? "",
-        createdAt: r.materialCreatedAt ?? new Date(),
-        updatedAt: r.materialUpdatedAt ?? new Date(),
+        name: r.materialName,
+        type: r.materialType,
+        spec: r.materialSpec,
+        description: r.materialDescription,
+        pictureUrl: r.materialPictureUrl,
+        unit: r.materialUnit,
+        createdAt: r.materialCreatedAt,
+        updatedAt: r.materialUpdatedAt,
       },
       vendor: {
         id: r.vendorId,
-        name: r.vendorName ?? "",
-        contactName: r.vendorContactName ?? "",
-        phone: r.vendorPhone ?? "",
-        email: r.vendorEmail ?? "",
-        website: r.vendorWebsite ?? "",
-        createdAt: r.vendorCreatedAt ?? new Date(),
-        updatedAt: r.vendorUpdatedAt ?? new Date(),
+        name: r.vendorName,
+        contactName: r.vendorContactName,
+        phone: r.vendorPhone,
+        email: r.vendorEmail,
+        website: r.vendorWebsite,
+        createdAt: r.vendorCreatedAt,
+        updatedAt: r.vendorUpdatedAt,
       },
     }));
 
@@ -96,13 +85,13 @@ router.get("/segments/:segmentId/bids", async (req: Request, res: Response) => {
 
 router.post("/segments/:segmentId/bids", async (req: Request, res: Response) => {
   const segmentId = Number(req.params.segmentId);
-  const parsed = insertVendorBidSchema.safeParse({ ...req.body, segmentId });
+  const parsed = CreateBidBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
   try {
-    const [bid] = await db.insert(vendorBidsTable).values(parsed.data).returning();
+    const [bid] = await db.insert(vendorBidsTable).values({ ...parsed.data, segmentId }).returning();
     res.status(201).json(bid);
   } catch (error) {
     req.log.error({ err: error }, "Failed to create bid");
@@ -112,7 +101,7 @@ router.post("/segments/:segmentId/bids", async (req: Request, res: Response) => 
 
 router.patch("/bids/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
-  const parsed = insertVendorBidSchema.partial().safeParse(req.body);
+  const parsed = UpdateBidBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;

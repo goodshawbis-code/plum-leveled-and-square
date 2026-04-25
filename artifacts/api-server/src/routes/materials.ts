@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
-import { db, materialsTable, insertMaterialSchema } from "@workspace/db";
+import { db, materialsTable } from "@workspace/db";
+import { CreateMaterialBody, UpdateMaterialBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
@@ -15,7 +16,7 @@ router.get("/materials", async (req: Request, res: Response) => {
 });
 
 router.post("/materials", async (req: Request, res: Response) => {
-  const parsed = insertMaterialSchema.safeParse(req.body);
+  const parsed = CreateMaterialBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
@@ -46,7 +47,7 @@ router.get("/materials/:id", async (req: Request, res: Response) => {
 
 router.patch("/materials/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
-  const parsed = insertMaterialSchema.partial().safeParse(req.body);
+  const parsed = UpdateMaterialBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;

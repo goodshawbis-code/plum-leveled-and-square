@@ -10,16 +10,6 @@ import {
 
 const router: IRouter = Router();
 
-/**
- * GET /dashboard
- *
- * Returns DashboardSummary as specified in the OpenAPI contract:
- * { totalProjects, activeProjects, totalEstimatedValue, recentProjects }
- * where each recentProject includes blueprintCount, segmentCount, estimatedTotal.
- *
- * totalEstimatedValue is computed across ALL projects (system-wide), not just
- * the top-10 recentProjects.
- */
 router.get("/dashboard", async (req: Request, res: Response) => {
   try {
     const [[totals], [globalBidTotals], recentProjectRows] = await Promise.all([

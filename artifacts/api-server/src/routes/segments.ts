@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
-import { db, segmentsTable, insertSegmentSchema } from "@workspace/db";
+import { db, segmentsTable } from "@workspace/db";
+import { CreateSegmentBody, UpdateSegmentBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
@@ -21,13 +22,13 @@ router.get("/blueprints/:blueprintId/segments", async (req: Request, res: Respon
 
 router.post("/blueprints/:blueprintId/segments", async (req: Request, res: Response) => {
   const blueprintId = Number(req.params.blueprintId);
-  const parsed = insertSegmentSchema.safeParse({ ...req.body, blueprintId });
+  const parsed = CreateSegmentBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
   try {
-    const [segment] = await db.insert(segmentsTable).values(parsed.data).returning();
+    const [segment] = await db.insert(segmentsTable).values({ ...parsed.data, blueprintId }).returning();
     res.status(201).json(segment);
   } catch (error) {
     req.log.error({ err: error }, "Failed to create segment");
@@ -52,7 +53,7 @@ router.get("/segments/:id", async (req: Request, res: Response) => {
 
 router.patch("/segments/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
-  const parsed = insertSegmentSchema.partial().safeParse(req.body);
+  const parsed = UpdateSegmentBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;

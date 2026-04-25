@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { db, projectsTable } from "@workspace/db";
-import { insertProjectSchema } from "@workspace/db";
+import { CreateProjectBody, UpdateProjectBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
@@ -16,7 +16,7 @@ router.get("/projects", async (req: Request, res: Response) => {
 });
 
 router.post("/projects", async (req: Request, res: Response) => {
-  const parsed = insertProjectSchema.safeParse(req.body);
+  const parsed = CreateProjectBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
@@ -47,7 +47,7 @@ router.get("/projects/:id", async (req: Request, res: Response) => {
 
 router.patch("/projects/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
-  const parsed = insertProjectSchema.partial().safeParse(req.body);
+  const parsed = UpdateProjectBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
