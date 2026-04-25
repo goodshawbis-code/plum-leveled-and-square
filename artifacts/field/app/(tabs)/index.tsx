@@ -2,6 +2,7 @@ import { useListProjects } from "@workspace/api-client-react";
 import type { Project } from "@workspace/api-client-react";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import React from "react";
 import {
   ActivityIndicator,
@@ -209,7 +210,12 @@ export default function ProjectsTab() {
         renderItem={({ item }) => (
           <ProjectCard
             project={item}
-            onPress={() => router.push({ pathname: "/project/[id]", params: { id: item.id } })}
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              router.push({ pathname: "/project/[id]", params: { id: item.id } });
+            }}
           />
         )}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}

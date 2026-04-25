@@ -8,14 +8,18 @@ import type { VendorBidDetail, SegmentPhoto } from "@workspace/api-client-react"
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Image,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -172,8 +176,13 @@ export default function SegmentDetailScreen() {
   const colors = useColors();
   const qc = useQueryClient();
 
-  const { data: segment, isLoading: segLoading, isError: segError } = useGetSegment(segmentId);
-  const { data: bids, isLoading: bidsLoading, isError: bidsError } = useListBids(segmentId);
+  const {
+    data: segment,
+    isLoading: segLoading,
+    isError: segError,
+    refetch: refetchSegment,
+  } = useGetSegment(segmentId);
+  const { data: bids, isLoading: bidsLoading, isError: bidsError, refetch: refetchBids } = useListBids(segmentId);
   const { data: photos = [], refetch: refetchPhotos } = useListSegmentPhotos(segmentId);
   const updateField = useUpdateSegmentField();
 
@@ -181,6 +190,23 @@ export default function SegmentDetailScreen() {
   const [notesDirty, setNotesDirty] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const savedOpacity = useRef(new Animated.Value(0)).current;
+
+  function showSavedToast() {
+    Animated.sequence([
+      Animated.timing(savedOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
+      Animated.delay(1200),
+      Animated.timing(savedOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start();
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await Promise.all([refetchSegment(), refetchBids(), refetchPhotos()]);
+    setRefreshing(false);
+  }
 
   useEffect(() => {
     if (segment) {
@@ -198,43 +224,82 @@ export default function SegmentDetailScreen() {
 
   async function handleToggleComplete() {
     if (!segment) return;
-    const newCompletedAt = isCompleted ? null : new Date().toISOString();
+    const completing = !isCompleted;
+    const newCompletedAt = completing ? new Date().toISOString() : null;
+    if (Platform.OS !== "web") {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     updateField.mutate(
       { id: segmentId, data: { completedAt: newCompletedAt } },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
+          if (Platform.OS !== "web") {
+            await Haptics.notificationAsync(
+              completing
+                ? Haptics.NotificationFeedbackType.Success
+                : Haptics.NotificationFeedbackType.Warning,
+            );
+          }
           qc.invalidateQueries({ queryKey: ["getSegment", segmentId] });
           qc.invalidateQueries({ queryKey: ["listSegments"] });
+        },
+        onError: async () => {
+          if (Platform.OS !== "web") {
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
+          Alert.alert("Error", "Could not update segment. Please try again.");
         },
       },
     );
   }
 
   async function handleSaveNotes() {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     setSavingNotes(true);
     updateField.mutate(
       { id: segmentId, data: { fieldNotes: fieldNotes.trim() || null } },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           setNotesDirty(false);
+          showSavedToast();
+          if (Platform.OS !== "web") {
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
           qc.invalidateQueries({ queryKey: ["getSegment", segmentId] });
+        },
+        onError: async () => {
+          if (Platform.OS !== "web") {
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
+          Alert.alert("Error", "Could not save notes. Please try again.");
         },
         onSettled: () => setSavingNotes(false),
       },
     );
   }
 
-  async function handleAddPhoto() {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission required", "Please allow photo library access to add photos.");
-      return;
+  async function pickAndUpload(source: "camera" | "library") {
+    if (source === "camera") {
+      const camPerm = await ImagePicker.requestCameraPermissionsAsync();
+      if (camPerm.status !== "granted") {
+        Alert.alert("Permission required", "Please allow camera access to take photos.");
+        return;
+      }
+    } else {
+      const libPerm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (libPerm.status !== "granted") {
+        Alert.alert("Permission required", "Please allow photo library access to add photos.");
+        return;
+      }
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: false,
-      quality: 0.8,
-    });
+
+    const result =
+      source === "camera"
+        ? await ImagePicker.launchCameraAsync({ allowsEditing: false, quality: 0.8 })
+        : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: false, quality: 0.8 });
+
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
     setUploadingPhoto(true);
@@ -251,12 +316,33 @@ export default function SegmentDetailScreen() {
         body: formData,
       });
       if (!resp.ok) throw new Error("Upload failed");
+      if (Platform.OS !== "web") {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
       await refetchPhotos();
     } catch {
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
       Alert.alert("Upload failed", "Could not upload photo. Please try again.");
     } finally {
       setUploadingPhoto(false);
     }
+  }
+
+  async function handleAddPhoto() {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    if (Platform.OS === "web") {
+      pickAndUpload("library");
+      return;
+    }
+    Alert.alert("Add Photo", "Choose a source", [
+      { text: "Take Photo", onPress: () => pickAndUpload("camera") },
+      { text: "Choose from Library", onPress: () => pickAndUpload("library") },
+      { text: "Cancel", style: "cancel" },
+    ]);
   }
 
   const topPad = Platform.OS === "web" ? 67 : 0;
@@ -299,14 +385,36 @@ export default function SegmentDetailScreen() {
     : null;
 
   return (
-    <ScrollView
-      style={{ backgroundColor: colors.background }}
-      contentContainerStyle={[
-        styles.scroll,
-        { paddingTop: topPad + 12, paddingBottom: Platform.OS === "web" ? 34 : 24 },
-      ]}
-      showsVerticalScrollIndicator={false}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      {/* "Saved!" toast — floats above content */}
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.savedToast, { opacity: savedOpacity }]}
+      >
+        <Feather name="check-circle" size={14} color="#fff" />
+        <Text style={styles.savedToastText}>Saved</Text>
+      </Animated.View>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingTop: topPad + 12, paddingBottom: Platform.OS === "web" ? 34 : 24 },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
       {picUrl ? (
         <Image
           source={{ uri: picUrl }}
@@ -496,7 +604,8 @@ export default function SegmentDetailScreen() {
           ))}
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -687,4 +796,23 @@ const styles = StyleSheet.create({
   emptyBidsText: { fontSize: 14, fontFamily: "Inter_400Regular" },
   emptyTitle: { fontSize: 18, fontFamily: "Inter_600SemiBold", textAlign: "center" },
   emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center", maxWidth: 260 },
+  savedToast: {
+    position: "absolute",
+    bottom: 32,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#1d2d5e",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 24,
+    zIndex: 100,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  savedToastText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#fff" },
 });

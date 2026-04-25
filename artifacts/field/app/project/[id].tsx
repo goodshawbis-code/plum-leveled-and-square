@@ -6,6 +6,7 @@ import {
 import type { Blueprint, Segment } from "@workspace/api-client-react";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -13,6 +14,7 @@ import {
   Image,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -373,17 +375,27 @@ export default function ProjectDetailScreen() {
   const [view, setView] = useState<"blueprint" | "list">("blueprint");
   const [selectedBlueprintIdx, setSelectedBlueprintIdx] = useState(0);
 
-  const { data: project } = useGetProject(projectId);
-  const { data: blueprints, isLoading: bpLoading } = useListBlueprints(projectId);
+  const { data: project, refetch: refetchProject } = useGetProject(projectId);
+  const { data: blueprints, isLoading: bpLoading, refetch: refetchBlueprints } = useListBlueprints(projectId);
   const activeBp = blueprints?.[selectedBlueprintIdx];
 
+  const [refreshing, setRefreshing] = useState(false);
   const currentStatus = STATUS_MAP[project?.status ?? "active"] ?? "ESTIMATING";
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await Promise.all([refetchProject(), refetchBlueprints()]);
+    setRefreshing(false);
+  }
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
   const navigateToSegment = (seg: Segment) => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     router.push({ pathname: "/segment/[segId]", params: { segId: seg.id } });
   };
 
@@ -412,7 +424,13 @@ export default function ProjectDetailScreen() {
           },
         ]}
       >
-        <Pressable onPress={() => router.back()} hitSlop={10}>
+        <Pressable
+          onPress={() => {
+            if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.back();
+          }}
+          hitSlop={10}
+        >
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.foreground }]} numberOfLines={1}>
@@ -454,7 +472,18 @@ export default function ProjectDetailScreen() {
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
         {/* Project info card */}
         <View
           style={[
@@ -509,7 +538,12 @@ export default function ProjectDetailScreen() {
         <View style={[styles.toggleWrap, { backgroundColor: colors.muted }]}>
           <Pressable
             testID="view-toggle-blueprint"
-            onPress={() => setView("blueprint")}
+            onPress={() => {
+              if (view !== "blueprint" && Platform.OS !== "web") {
+                Haptics.selectionAsync();
+              }
+              setView("blueprint");
+            }}
             style={[
               styles.toggleBtn,
               view === "blueprint" && { backgroundColor: colors.card },
@@ -531,7 +565,12 @@ export default function ProjectDetailScreen() {
           </Pressable>
           <Pressable
             testID="view-toggle-list"
-            onPress={() => setView("list")}
+            onPress={() => {
+              if (view !== "list" && Platform.OS !== "web") {
+                Haptics.selectionAsync();
+              }
+              setView("list");
+            }}
             style={[
               styles.toggleBtn,
               view === "list" && { backgroundColor: colors.card },
