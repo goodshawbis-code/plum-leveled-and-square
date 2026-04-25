@@ -6,7 +6,7 @@ import {
 import type { Blueprint, Segment } from "@workspace/api-client-react";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -142,6 +142,144 @@ function SegmentListItem({
   );
 }
 
+function BlueprintView({
+  activeBp,
+  blueprints,
+  selectedBlueprintIdx,
+  onSelectBlueprint,
+  onSegmentPress,
+}: {
+  activeBp: Blueprint;
+  blueprints: Blueprint[];
+  selectedBlueprintIdx: number;
+  onSelectBlueprint: (idx: number) => void;
+  onSegmentPress: (seg: Segment) => void;
+}) {
+  const colors = useColors();
+  const { data: segments, isLoading } = useListSegments(activeBp.id);
+  const segs = segments ?? [];
+
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      {blueprints.length > 1 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.bpTabs}
+        >
+          {blueprints.map((bp, idx) => (
+            <Pressable
+              key={bp.id}
+              onPress={() => onSelectBlueprint(idx)}
+              style={[
+                styles.bpTab,
+                {
+                  backgroundColor: idx === selectedBlueprintIdx ? colors.primary : colors.muted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.bpTabText,
+                  {
+                    color:
+                      idx === selectedBlueprintIdx
+                        ? colors.primaryForeground
+                        : colors.mutedForeground,
+                  },
+                ]}
+              >
+                {bp.fileName}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+      <BlueprintWithSegments
+        blueprint={activeBp}
+        segments={segs}
+        onSegmentPress={onSegmentPress}
+      />
+      {segs.length > 0 ? (
+        <View style={styles.legendRow}>
+          <Text style={[styles.legendTitle, { color: colors.mutedForeground }]}>
+            TAP A HIGHLIGHTED AREA TO VIEW DETAILS
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.center}>
+          <Feather name="tag" size={32} color={colors.mutedForeground} />
+          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+            No segments tagged yet
+          </Text>
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+function SegmentsListView({
+  activeBp,
+  onSegmentPress,
+}: {
+  activeBp: Blueprint;
+  onSegmentPress: (seg: Segment) => void;
+}) {
+  const colors = useColors();
+  const { data: segments, isLoading } = useListSegments(activeBp.id);
+  const segs = segments ?? [];
+
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (segs.length === 0) {
+    return (
+      <View style={styles.center}>
+        <Feather name="tag" size={48} color={colors.mutedForeground} />
+        <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No Segments</Text>
+        <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+          Tag areas in the office app to see them here
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingBottom: Platform.OS === "web" ? 34 : 20 },
+      ]}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.segList}>
+        {segs.map((seg, idx) => (
+          <SegmentListItem
+            key={seg.id}
+            segment={seg}
+            index={idx}
+            onPress={() => onSegmentPress(seg)}
+          />
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
+
 export default function ProjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const projectId = Number(id);
@@ -154,22 +292,36 @@ export default function ProjectDetailScreen() {
   const { data: project } = useGetProject(projectId);
   const { data: blueprints, isLoading: bpLoading } = useListBlueprints(projectId);
   const activeBp = blueprints?.[selectedBlueprintIdx];
-  const { data: segments, isLoading: segLoading } = useListSegments(activeBp?.id ?? 0);
 
   useLayoutEffect(() => {
-    if (project) {
-      navigation.setOptions({ title: project.name });
-    }
-  }, [project, navigation]);
+    navigation.setOptions({
+      title: project?.name ?? "Project",
+      headerRight: activeBp
+        ? () => (
+            <Pressable
+              testID="open-segment-list"
+              onPress={() =>
+                router.push({
+                  pathname: "/segment-list/[bpId]",
+                  params: { bpId: activeBp.id },
+                })
+              }
+              style={{ marginRight: 4 }}
+            >
+              <Feather name="list" size={22} color={colors.primary} />
+            </Pressable>
+          )
+        : undefined,
+    });
+  }, [project, activeBp, navigation, router, colors.primary]);
 
   const topPad = Platform.OS === "web" ? 67 : 0;
-  const isLoading = bpLoading || segLoading;
 
   const navigateToSegment = (seg: Segment) => {
     router.push({ pathname: "/segment/[segId]", params: { segId: seg.id } });
   };
 
-  if (isLoading) {
+  if (bpLoading) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background, paddingTop: topPad }]}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -178,7 +330,6 @@ export default function ProjectDetailScreen() {
   }
 
   const hasBlueprints = blueprints && blueprints.length > 0;
-  const segs = segments ?? [];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -239,102 +390,17 @@ export default function ProjectDetailScreen() {
             Upload a blueprint in the office app
           </Text>
         </View>
-      ) : view === "blueprint" ? (
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {blueprints.length > 1 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.bpTabs}
-            >
-              {blueprints.map((bp, idx) => (
-                <Pressable
-                  key={bp.id}
-                  onPress={() => setSelectedBlueprintIdx(idx)}
-                  style={[
-                    styles.bpTab,
-                    {
-                      backgroundColor:
-                        idx === selectedBlueprintIdx ? colors.primary : colors.muted,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.bpTabText,
-                      {
-                        color:
-                          idx === selectedBlueprintIdx
-                            ? colors.primaryForeground
-                            : colors.mutedForeground,
-                      },
-                    ]}
-                  >
-                    {bp.fileName}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          )}
-          {activeBp && (
-            <BlueprintWithSegments
-              blueprint={activeBp}
-              segments={segs}
-              onSegmentPress={navigateToSegment}
-            />
-          )}
-          {segs.length > 0 && (
-            <View style={styles.legendRow}>
-              <Text style={[styles.legendTitle, { color: colors.mutedForeground }]}>
-                TAP A HIGHLIGHTED AREA TO VIEW DETAILS
-              </Text>
-            </View>
-          )}
-          {segs.length === 0 && activeBp && (
-            <View style={styles.center}>
-              <Feather name="tag" size={32} color={colors.mutedForeground} />
-              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-                No segments tagged yet
-              </Text>
-            </View>
-          )}
-        </ScrollView>
-      ) : (
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: Platform.OS === "web" ? 34 : 20 },
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
-          {segs.length === 0 ? (
-            <View style={styles.center}>
-              <Feather name="tag" size={48} color={colors.mutedForeground} />
-              <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
-                No Segments
-              </Text>
-              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-                Tag areas in the office app to see them here
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.segList}>
-              {segs.map((seg, idx) => (
-                <SegmentListItem
-                  key={seg.id}
-                  segment={seg}
-                  index={idx}
-                  onPress={() => navigateToSegment(seg)}
-                />
-              ))}
-            </View>
-          )}
-        </ScrollView>
-      )}
+      ) : view === "blueprint" && activeBp ? (
+        <BlueprintView
+          activeBp={activeBp}
+          blueprints={blueprints}
+          selectedBlueprintIdx={selectedBlueprintIdx}
+          onSelectBlueprint={setSelectedBlueprintIdx}
+          onSegmentPress={navigateToSegment}
+        />
+      ) : activeBp ? (
+        <SegmentsListView activeBp={activeBp} onSegmentPress={navigateToSegment} />
+      ) : null}
     </View>
   );
 }
