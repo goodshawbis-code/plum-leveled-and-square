@@ -1,4 +1,4 @@
-import { useGetDashboard } from "@workspace/api-client-react";
+import { useGetDashboard, useListProjects } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
   const { data: dashboard, isLoading } = useGetDashboard();
+  const { data: projects, isLoading: isLoadingProjects } = useListProjects();
 
-  if (isLoading) {
+  if (isLoading || isLoadingProjects) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -76,41 +77,31 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <h2 className="text-2xl font-semibold tracking-tight mt-8 mb-4">Recent Projects</h2>
+      <h2 className="text-2xl font-semibold tracking-tight mt-8 mb-4">All Projects</h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {dashboard?.recentProjects?.map((project) => (
+        {projects?.map((project) => (
           <Card key={project.id} data-testid={`card-project-${project.id}`}>
             <CardHeader>
               <CardTitle className="flex justify-between items-start">
                 <span className="line-clamp-1" title={project.name}>{project.name}</span>
-                <span className="text-xs font-normal px-2 py-1 bg-primary/10 text-primary rounded-full">
+                <span className="text-xs font-normal px-2 py-1 bg-primary/10 text-primary rounded-full capitalize">
                   {project.status}
                 </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground mb-4 line-clamp-1" title={project.address}>
+              <div className="text-sm text-muted-foreground mb-4 line-clamp-1" title={project.address ?? undefined}>
                 {project.address || "No address provided"}
-              </div>
-              <div className="flex justify-between text-sm mb-4">
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground">Blueprints</span>
-                  <span className="font-medium">{project.blueprintCount}</span>
-                </div>
-                <div className="flex flex-col text-right">
-                  <span className="text-muted-foreground">Segments</span>
-                  <span className="font-medium">{project.segmentCount}</span>
-                </div>
               </div>
               <div className="flex justify-between items-center pt-4 border-t">
                 <span className="font-semibold text-primary">
                   {new Intl.NumberFormat("en-US", {
                     style: "currency",
                     currency: "USD",
-                  }).format(project.estimatedTotal ?? 0)}
+                  }).format(0)}
                 </span>
                 <Link href={`/projects/${project.id}`}>
-                  <Button variant="ghost" size="sm" className="gap-1">
+                  <Button variant="ghost" size="sm" className="gap-1" data-testid={`btn-view-project-${project.id}`}>
                     View <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -118,7 +109,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         ))}
-        {(!dashboard?.recentProjects || dashboard.recentProjects.length === 0) && (
+        {(!projects || projects.length === 0) && (
           <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed rounded-lg">
             No projects found. Create one to get started.
           </div>

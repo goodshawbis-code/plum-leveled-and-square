@@ -76,7 +76,7 @@ export default function Materials() {
     }
   };
 
-  const openEdit = (material: any) => {
+  const openEdit = (material: Material) => {
     setEditingMaterial(material);
     form.reset({
       name: material.name,

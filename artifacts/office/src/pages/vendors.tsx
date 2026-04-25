@@ -75,7 +75,7 @@ export default function Vendors() {
     }
   };
 
-  const openEdit = (vendor: any) => {
+  const openEdit = (vendor: Vendor) => {
     setEditingVendor(vendor);
     form.reset({
       name: vendor.name,
