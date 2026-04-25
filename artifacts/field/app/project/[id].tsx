@@ -67,13 +67,21 @@ function BlueprintWithSegments({
         style={{ width: displayWidth, height: displayHeight || displayWidth * 0.75 }}
         resizeMode="contain"
       />
+      {/*
+       * Coordinate semantics: seg.x / seg.y / seg.width / seg.height are stored
+       * as PERCENTAGE values (0–100), where 100 represents the full blueprint dimension.
+       * Confirmed via API: e.g. x=10 means "10% from the left edge".
+       * We normalise to pixels by multiplying pct/100 by the rendered display size.
+       */}
       {imgSize.width > 0 &&
         segments.map((seg, idx) => {
           const color = getSegmentColor(idx);
-          const left = (seg.x / 100) * displayWidth;
-          const top = (seg.y / 100) * (displayHeight || displayWidth * 0.75);
-          const width = (seg.width / 100) * displayWidth;
-          const height = (seg.height / 100) * (displayHeight || displayWidth * 0.75);
+          const pctToX = (pct: number) => (pct / 100) * displayWidth;
+          const pctToY = (pct: number) => (pct / 100) * (displayHeight || displayWidth * 0.75);
+          const left = pctToX(seg.x);
+          const top = pctToY(seg.y);
+          const width = pctToX(seg.width);
+          const height = pctToY(seg.height);
           return (
             <TouchableOpacity
               key={seg.id}

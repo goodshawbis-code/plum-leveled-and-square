@@ -13,6 +13,8 @@ pnpm workspace monorepo using TypeScript. All apps share the same backend API an
 ```
 artifacts/
   api-server/       Express 5 REST API (port from $PORT, default 8080)
+  office/           React + Vite web app for GC estimators (preview path /)
+  field/            Expo React Native app for foremen (preview path /field/)
   mockup-sandbox/   Vite component preview server
 lib/
   db/               Drizzle ORM schema + migrations (PostgreSQL)
@@ -45,6 +47,10 @@ lib/
 | `vendors` | Vendor directory (name, contact, phone, email) |
 | `vendor_bids` | Bids per segment/material/vendor with quantity & unit price |
 | `estimates` | Generated project estimates (draft/final) |
+
+## Segment Coordinates
+
+Segment `x`, `y`, `width`, `height` are stored as **percentage values (0–100)** relative to the blueprint image dimensions. For example, `x=10` means 10% from the left edge. The field app converts to pixels by multiplying `pct / 100 * displaySize`.
 
 ## API Endpoints (all under `/api`)
 
