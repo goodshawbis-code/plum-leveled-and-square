@@ -16,16 +16,25 @@ const router: IRouter = Router();
  * Returns DashboardSummary as specified in the OpenAPI contract:
  * { totalProjects, activeProjects, totalEstimatedValue, recentProjects }
  * where each recentProject includes blueprintCount, segmentCount, estimatedTotal.
+ *
+ * totalEstimatedValue is computed across ALL projects (system-wide), not just
+ * the top-10 recentProjects.
  */
 router.get("/dashboard", async (req: Request, res: Response) => {
   try {
-    const [[totals], recentProjectRows] = await Promise.all([
+    const [[totals], [globalBidTotals], recentProjectRows] = await Promise.all([
       db
         .select({
           totalProjects: count(),
           activeProjects: sql<number>`count(*) filter (where ${projectsTable.status} = 'active')`,
         })
         .from(projectsTable),
+
+      db
+        .select({
+          total: sql<number>`coalesce(sum(${vendorBidsTable.unitPrice} * ${vendorBidsTable.quantity}) filter (where ${vendorBidsTable.isSelected} = true), 0)`,
+        })
+        .from(vendorBidsTable),
 
       db
         .select({
@@ -70,7 +79,7 @@ router.get("/dashboard", async (req: Request, res: Response) => {
         ? db
             .select({
               projectId: blueprintsTable.projectId,
-              total: sql<number>`sum(${vendorBidsTable.unitPrice} * ${vendorBidsTable.quantity}) filter (where ${vendorBidsTable.isSelected} = true)`,
+              total: sql<number>`coalesce(sum(${vendorBidsTable.unitPrice} * ${vendorBidsTable.quantity}) filter (where ${vendorBidsTable.isSelected} = true), 0)`,
             })
             .from(vendorBidsTable)
             .innerJoin(segmentsTable, eq(vendorBidsTable.segmentId, segmentsTable.id))
@@ -95,7 +104,7 @@ router.get("/dashboard", async (req: Request, res: Response) => {
       createdAt: p.createdAt,
     }));
 
-    const totalEstimatedValue = recentProjects.reduce((sum, p) => sum + p.estimatedTotal, 0);
+    const totalEstimatedValue = Number(globalBidTotals?.total ?? 0);
 
     res.json({
       totalProjects: Number(totals?.totalProjects ?? 0),

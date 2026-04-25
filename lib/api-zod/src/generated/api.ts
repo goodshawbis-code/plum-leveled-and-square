@@ -134,16 +134,22 @@ export const ListBlueprintsResponseItem = zod.object({
 export const ListBlueprintsResponse = zod.array(ListBlueprintsResponseItem);
 
 /**
- * @summary Add a blueprint (after uploading file to storage)
+ * @summary Upload a blueprint file and register it for a project
  */
 export const CreateBlueprintParams = zod.object({
   projectId: zod.coerce.number(),
 });
 
+export const createBlueprintBodyPageCountDefault = 1;
+
 export const CreateBlueprintBody = zod.object({
-  fileUrl: zod.string(),
-  fileName: zod.string(),
-  pageCount: zod.number().optional(),
+  file: zod
+    .any()
+    .describe("The blueprint PDF or image file to upload"),
+  pageCount: zod
+    .number()
+    .default(createBlueprintBodyPageCountDefault)
+    .describe("Number of pages in the blueprint"),
 });
 
 /**

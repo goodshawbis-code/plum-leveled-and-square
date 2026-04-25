@@ -723,7 +723,7 @@ export function useListBlueprints<
 }
 
 /**
- * @summary Add a blueprint (after uploading file to storage)
+ * @summary Upload a blueprint file and register it for a project
  */
 export const getCreateBlueprintUrl = (projectId: number) => {
   return `/api/projects/${projectId}/blueprints`;
@@ -734,11 +734,16 @@ export const createBlueprint = async (
   createBlueprintBody: CreateBlueprintBody,
   options?: RequestInit,
 ): Promise<Blueprint> => {
+  const formData = new FormData();
+  formData.append(`file`, createBlueprintBody.file);
+  if (createBlueprintBody.pageCount !== undefined) {
+    formData.append(`pageCount`, createBlueprintBody.pageCount.toString());
+  }
+
   return customFetch<Blueprint>(getCreateBlueprintUrl(projectId), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(createBlueprintBody),
+    body: formData,
   });
 };
 
@@ -787,7 +792,7 @@ export type CreateBlueprintMutationBody = BodyType<CreateBlueprintBody>;
 export type CreateBlueprintMutationError = ErrorType<unknown>;
 
 /**
- * @summary Add a blueprint (after uploading file to storage)
+ * @summary Upload a blueprint file and register it for a project
  */
 export const useCreateBlueprint = <
   TError = ErrorType<unknown>,

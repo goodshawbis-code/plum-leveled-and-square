@@ -193,7 +193,7 @@ paths:
     post:
       operationId: createBlueprint
       tags: [blueprints]
-      summary: Add a blueprint (after uploading file to storage)
+      summary: Upload a blueprint file and register it for a project
       parameters:
         - name: projectId
           in: path
@@ -203,7 +203,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               $ref: "#/components/schemas/CreateBlueprintBody"
       responses:
@@ -795,15 +795,16 @@ components:
     CreateBlueprintBody:
       type: object
       properties:
-        fileUrl:
+        file:
           type: string
-        fileName:
-          type: string
+          format: binary
+          description: The blueprint PDF or image file to upload
         pageCount:
           type: integer
+          default: 1
+          description: Number of pages in the blueprint
       required:
-        - fileUrl
-        - fileName
+        - file
 
     # ── Segment ──────────────────────────────────────────────────────────────
     Segment:

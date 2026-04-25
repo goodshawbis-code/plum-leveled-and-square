@@ -74,8 +74,9 @@ export interface Blueprint {
 }
 
 export interface CreateBlueprintBody {
-  fileUrl: string;
-  fileName: string;
+  /** The blueprint PDF or image file to upload */
+  file: Blob;
+  /** Number of pages in the blueprint */
   pageCount?: number;
 }
 
