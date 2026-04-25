@@ -1,0 +1,72 @@
+
+Log
+04-24 23:08:06
+waiting for runnable artifact ports ports=[8080 22660]
+04-25 06:41:03
+> node server/serve.js
+04-25 06:41:03
+> @workspace/mason@0.0.0 serve /home/runner/workspace/artifacts/mason
+04-25 06:41:03
+artifact port detected port=22660 detected=2 expected=2
+04-25 06:41:03
+all artifact ports detected
+04-25 06:41:03
+artifact processes running, waiting for signal or process exit
+04-25 06:41:03
+Serving static Expo build on port 22660
+04-25 06:41:05
+{"level":30,"time":1777124465447,"pid":19,"hostname":"localhost","req":{"id":2,"method":"GET","url":"/api/healthz"},"res":{"statusCode":200},"responseTime":1,"msg":"request completed"}
+04-25 06:56:10
+sending SIGTERM to artifact process artifact=artifacts/api-server
+04-25 06:56:10
+received signal, shutting down artifact processes signal=terminated
+04-25 06:56:10
+sending SIGTERM to artifact process artifact=artifacts/mason
+04-25 06:56:10
+artifact process exited with error error=signal: terminated artifact=artifacts/api-server
+04-25 06:56:10
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/mason@0.0.0 serve: `node server/serve.js`
+04-25 06:56:10
+Command failed with signal "SIGTERM"
+04-25 06:56:10
+/home/runner/workspace/artifacts/mason:
+04-25 08:51:29
+artifact mode enabled runnable=2 static=0
+04-25 08:51:29
+waiting for runnable artifact ports ports=[8080 22660]
+04-25 08:51:29
+starting artifact processes for monorepo deployment
+04-25 08:51:29
+metasidecar: loaded enterprise status from environment is_enterprise=false
+04-25 08:51:29
+forwarding local port 0 to external port 80 (mapped as 1104)
+04-25 08:51:29
+starting up user application
+04-25 08:51:29
+baseline ports snapshot before artifact start ports=[1105 1106 1104]
+04-25 08:51:29
+starting artifact processes count=2
+04-25 08:51:29
+starting artifact process artifact=artifacts/api-server args=[node --enable-source-maps artifacts/api-server/dist/index.mjs] port=8080
+04-25 08:51:29
+starting artifact process args=[pnpm --filter @workspace/mason run serve] port=22660 artifact=artifacts/mason
+04-25 08:51:29
+artifact process started artifact=artifacts/mason pid=19
+04-25 08:51:29
+artifact process started artifact=artifacts/api-server pid=18
+04-25 08:51:30
+artifact port detected detected=1 expected=2 port=8080
+04-25 08:51:30
+{"level":30,"time":1777132290380,"pid":18,"hostname":"localhost","port":8080,"msg":"Server listening"}
+04-25 08:51:30
+{"level":30,"time":1777132290421,"pid":18,"hostname":"localhost","req":{"id":1,"method":"GET","url":"/api/healthz"},"res":{"statusCode":200},"responseTime":8,"msg":"request completed"}
+04-25 08:51:30
+> @workspace/mason@0.0.0 serve /home/runner/workspace/artifacts/mason
+04-25 08:51:30
+> node server/serve.js
+04-25 08:51:30
+all artifact ports detected
+04-25 08:51:30
+artifact processes running, waiting for signal or process exit
+04-25 08:51:30
+artifact port detected expected=2 port=22660 detected=2
