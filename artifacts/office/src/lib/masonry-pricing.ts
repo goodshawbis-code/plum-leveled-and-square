@@ -1,5 +1,5 @@
 export type ProjectType = "residential" | "commercial" | "outdoor";
-export type MaterialType = "cmu_standard" | "cmu_splitface" | "brick_standard" | "brick_splitface" | "concrete_footing" | "grout_fill" | "rebar" | "mortar";
+export type MaterialType = "culture_stone" | "cmu_standard" | "cmu_splitface" | "brick_standard" | "brick_splitface" | "concrete_footing" | "grout_fill" | "rebar" | "mortar";
 
 export interface PricingRate {
   materialId: MaterialType;
@@ -80,6 +80,18 @@ export const PROJECT_TYPES: ProjectTypeConfig[] = [
 ];
 
 export const PORTLAND_PRICING: Record<MaterialType, PricingRate> = {
+  culture_stone: {
+    materialId: "culture_stone",
+    label: "Culture Stone / Manufactured Stone Veneer",
+    unit: "SF",
+    laborLow: 6.00,
+    laborHigh: 9.00,
+    materialLow: 9.00,
+    materialHigh: 13.00,
+    installedLow: 15.00,
+    installedHigh: 22.00,
+    notes: "Manufactured stone veneer (Cultured Stone®, ProVia, Eldorado, etc.). $15/SF base installed rate. Includes scratch coat, mortar bed, stone placement, and pointing. Add 15% for corners and transition trim pieces.",
+  },
   cmu_standard: {
     materialId: "cmu_standard",
     label: "CMU Block (Standard 8×8×16)",
@@ -179,9 +191,9 @@ export const PORTLAND_PRICING: Record<MaterialType, PricingRate> = {
 };
 
 export const PROJECT_TYPE_DEFAULT_MATERIALS: Record<ProjectType, MaterialType[]> = {
-  residential: ["cmu_standard", "concrete_footing", "rebar", "grout_fill", "mortar"],
+  residential: ["culture_stone", "cmu_standard", "concrete_footing", "rebar", "grout_fill", "mortar"],
   commercial: ["cmu_splitface", "concrete_footing", "rebar", "grout_fill", "mortar"],
-  outdoor: ["brick_splitface", "concrete_footing", "mortar"],
+  outdoor: ["culture_stone", "brick_splitface", "concrete_footing", "mortar"],
 };
 
 export interface BidInput {

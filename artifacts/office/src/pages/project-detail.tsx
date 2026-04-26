@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2, FileImage, Image as ImageIcon, Calculator, ArrowLeft, Maximize, Layers, CheckCircle2, MessageSquare } from "lucide-react";
+import { BlueprintAIScanner } from "@/components/BlueprintAIScanner";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -243,6 +244,11 @@ export default function ProjectDetail() {
           )}
         </Card>
       </div>
+
+      {/* AI Blueprint Scanner */}
+      {selectedBlueprint && (
+        <BlueprintAIScanner blueprint={selectedBlueprint} />
+      )}
 
       {/* Segment List Panel */}
       {selectedBlueprint && (

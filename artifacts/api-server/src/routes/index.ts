@@ -13,6 +13,7 @@ import stripeRouter from "./stripe";
 import commentsRouter from "./comments";
 import rfisRouter from "./rfis";
 import licensesRouter from "./licenses";
+import blueprintAnalysisRouter from "./blueprintAnalysis";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(storageRouter);
 router.use(commentsRouter);
 router.use(rfisRouter);
 router.use(licensesRouter);
+router.use(blueprintAnalysisRouter);
 
 export default router;
