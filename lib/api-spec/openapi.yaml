@@ -28,6 +28,10 @@ tags:
     description: Dashboard summary
   - name: storage
     description: Object storage
+  - name: comments
+    description: Site comments with location pinning
+  - name: rfis
+    description: Requests for Information (field to office)
 
 paths:
   /healthz:
@@ -772,6 +776,178 @@ paths:
               schema:
                 $ref: "#/components/schemas/RequestUploadUrlResponse"
 
+  # ── Site Comments ─────────────────────────────────────────────────────────
+  /projects/{id}/comments:
+    get:
+      operationId: listProjectComments
+      tags: [comments]
+      summary: List comments for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SiteComment"
+    post:
+      operationId: createComment
+      tags: [comments]
+      summary: Create a site comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSiteCommentBody"
+      responses:
+        "201":
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteComment"
+
+  /comments/{id}:
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      summary: Delete a comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── RFIs ──────────────────────────────────────────────────────────────────
+  /projects/{id}/rfis:
+    get:
+      operationId: listProjectRfis
+      tags: [rfis]
+      summary: List RFIs for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of RFIs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Rfi"
+    post:
+      operationId: createRfi
+      tags: [rfis]
+      summary: Create an RFI (field to office)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRfiBody"
+      responses:
+        "201":
+          description: Created RFI
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rfi"
+
+  /rfis/{id}:
+    get:
+      operationId: getRfi
+      tags: [rfis]
+      summary: Get an RFI
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: RFI
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rfi"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateRfi
+      tags: [rfis]
+      summary: Update an RFI (office responds)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRfiBody"
+      responses:
+        "200":
+          description: Updated RFI
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rfi"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteRfi
+      tags: [rfis]
+      summary: Delete an RFI
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
 components:
   schemas:
     HealthStatus:
@@ -1394,3 +1570,161 @@ components:
       required:
         - uploadURL
         - objectPath
+
+    # ── Site Comments ─────────────────────────────────────────────────────────
+    SiteComment:
+      type: object
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        segmentId:
+          type: integer
+          nullable: true
+        blueprintId:
+          type: integer
+          nullable: true
+        authorName:
+          type: string
+        content:
+          type: string
+        pinType:
+          type: string
+          enum: [gps, blueprint, none]
+        blueprintX:
+          type: number
+          nullable: true
+        blueprintY:
+          type: number
+          nullable: true
+        locationLat:
+          type: number
+          nullable: true
+        locationLng:
+          type: number
+          nullable: true
+        locationLabel:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - projectId
+        - authorName
+        - content
+        - pinType
+        - createdAt
+        - updatedAt
+
+    CreateSiteCommentBody:
+      type: object
+      properties:
+        segmentId:
+          type: integer
+        blueprintId:
+          type: integer
+        authorName:
+          type: string
+        content:
+          type: string
+        pinType:
+          type: string
+          enum: [gps, blueprint, none]
+        blueprintX:
+          type: number
+        blueprintY:
+          type: number
+        locationLat:
+          type: number
+        locationLng:
+          type: number
+        locationLabel:
+          type: string
+      required:
+        - content
+
+    # ── RFIs ──────────────────────────────────────────────────────────────────
+    Rfi:
+      type: object
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        segmentId:
+          type: integer
+          nullable: true
+        rfiNumber:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        status:
+          type: string
+          enum: [open, answered, closed]
+        submittedBy:
+          type: string
+        response:
+          type: string
+          nullable: true
+        respondedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - projectId
+        - rfiNumber
+        - title
+        - description
+        - priority
+        - status
+        - submittedBy
+        - createdAt
+        - updatedAt
+
+    CreateRfiBody:
+      type: object
+      properties:
+        segmentId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        submittedBy:
+          type: string
+      required:
+        - title
+        - description
+
+    UpdateRfiBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, answered, closed]
+        response:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]

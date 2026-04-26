@@ -7,3 +7,5 @@ export * from "./vendors";
 export * from "./vendor_bids";
 export * from "./estimates";
 export * from "./users";
+export * from "./site_comments";
+export * from "./rfis";

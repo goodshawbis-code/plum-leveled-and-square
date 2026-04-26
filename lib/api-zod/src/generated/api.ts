@@ -625,3 +625,155 @@ export const RequestUploadUrlResponse = zod.object({
   uploadURL: zod.string(),
   objectPath: zod.string(),
 });
+
+/**
+ * @summary List comments for a project
+ */
+export const ListProjectCommentsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ListProjectCommentsResponseItem = zod.object({
+  id: zod.number(),
+  projectId: zod.number(),
+  segmentId: zod.number().nullish(),
+  blueprintId: zod.number().nullish(),
+  authorName: zod.string(),
+  content: zod.string(),
+  pinType: zod.enum(["gps", "blueprint", "none"]),
+  blueprintX: zod.number().nullish(),
+  blueprintY: zod.number().nullish(),
+  locationLat: zod.number().nullish(),
+  locationLng: zod.number().nullish(),
+  locationLabel: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const ListProjectCommentsResponse = zod.array(
+  ListProjectCommentsResponseItem,
+);
+
+/**
+ * @summary Create a site comment
+ */
+export const CreateCommentParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CreateCommentBody = zod.object({
+  segmentId: zod.number().optional(),
+  blueprintId: zod.number().optional(),
+  authorName: zod.string().optional(),
+  content: zod.string(),
+  pinType: zod.enum(["gps", "blueprint", "none"]).optional(),
+  blueprintX: zod.number().optional(),
+  blueprintY: zod.number().optional(),
+  locationLat: zod.number().optional(),
+  locationLng: zod.number().optional(),
+  locationLabel: zod.string().optional(),
+});
+
+/**
+ * @summary Delete a comment
+ */
+export const DeleteCommentParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List RFIs for a project
+ */
+export const ListProjectRfisParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ListProjectRfisResponseItem = zod.object({
+  id: zod.number(),
+  projectId: zod.number(),
+  segmentId: zod.number().nullish(),
+  rfiNumber: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  priority: zod.enum(["low", "medium", "high", "urgent"]),
+  status: zod.enum(["open", "answered", "closed"]),
+  submittedBy: zod.string(),
+  response: zod.string().nullish(),
+  respondedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const ListProjectRfisResponse = zod.array(ListProjectRfisResponseItem);
+
+/**
+ * @summary Create an RFI (field to office)
+ */
+export const CreateRfiParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CreateRfiBody = zod.object({
+  segmentId: zod.number().optional(),
+  title: zod.string(),
+  description: zod.string(),
+  priority: zod.enum(["low", "medium", "high", "urgent"]).optional(),
+  submittedBy: zod.string().optional(),
+});
+
+/**
+ * @summary Get an RFI
+ */
+export const GetRfiParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetRfiResponse = zod.object({
+  id: zod.number(),
+  projectId: zod.number(),
+  segmentId: zod.number().nullish(),
+  rfiNumber: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  priority: zod.enum(["low", "medium", "high", "urgent"]),
+  status: zod.enum(["open", "answered", "closed"]),
+  submittedBy: zod.string(),
+  response: zod.string().nullish(),
+  respondedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update an RFI (office responds)
+ */
+export const UpdateRfiParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateRfiBody = zod.object({
+  status: zod.enum(["open", "answered", "closed"]).optional(),
+  response: zod.string().optional(),
+  priority: zod.enum(["low", "medium", "high", "urgent"]).optional(),
+});
+
+export const UpdateRfiResponse = zod.object({
+  id: zod.number(),
+  projectId: zod.number(),
+  segmentId: zod.number().nullish(),
+  rfiNumber: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  priority: zod.enum(["low", "medium", "high", "urgent"]),
+  status: zod.enum(["open", "answered", "closed"]),
+  submittedBy: zod.string(),
+  response: zod.string().nullish(),
+  respondedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete an RFI
+ */
+export const DeleteRfiParams = zod.object({
+  id: zod.coerce.number(),
+});

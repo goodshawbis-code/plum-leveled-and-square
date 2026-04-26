@@ -5,6 +5,8 @@ import {
   useGetProjectEstimate,
 } from "@workspace/api-client-react";
 import type { Blueprint, Segment, EstimateLineItem } from "@workspace/api-client-react";
+import { CommentsView } from "@/components/CommentsView";
+import { RFIsView } from "@/components/RFIsView";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -449,7 +451,7 @@ export default function ProjectDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [tabMode, setTabMode] = useState<"field" | "office">("field");
-  const [view, setView] = useState<"blueprint" | "list">("blueprint");
+  const [view, setView] = useState<"blueprint" | "list" | "comments" | "rfis">("blueprint");
   const [selectedBlueprintIdx, setSelectedBlueprintIdx] = useState(0);
 
   const { data: project, refetch: refetchProject } = useGetProject(projectId);
@@ -626,67 +628,42 @@ export default function ProjectDetailScreen() {
           </ScrollView>
         </View>
 
-        {/* Blueprint / List toggle */}
+        {/* Blueprint / List / Comments / RFIs toggle */}
         <View style={[styles.toggleWrap, { backgroundColor: colors.muted }]}>
-          <Pressable
-            testID="view-toggle-blueprint"
-            onPress={() => {
-              if (view !== "blueprint" && Platform.OS !== "web") {
-                Haptics.selectionAsync();
-              }
-              setView("blueprint");
-            }}
-            style={[
-              styles.toggleBtn,
-              view === "blueprint" && { backgroundColor: colors.card },
-            ]}
-          >
-            <Feather
-              name="map"
-              size={14}
-              color={view === "blueprint" ? colors.primary : colors.mutedForeground}
-            />
-            <Text
-              style={[
-                styles.toggleBtnText,
-                { color: view === "blueprint" ? colors.primary : colors.mutedForeground },
-              ]}
-            >
-              Blueprint
-            </Text>
-          </Pressable>
-          <Pressable
-            testID="view-toggle-list"
-            onPress={() => {
-              if (view !== "list" && Platform.OS !== "web") {
-                Haptics.selectionAsync();
-              }
-              setView("list");
-            }}
-            style={[
-              styles.toggleBtn,
-              view === "list" && { backgroundColor: colors.card },
-            ]}
-          >
-            <Feather
-              name="list"
-              size={14}
-              color={view === "list" ? colors.primary : colors.mutedForeground}
-            />
-            <Text
-              style={[
-                styles.toggleBtnText,
-                { color: view === "list" ? colors.primary : colors.mutedForeground },
-              ]}
-            >
-              Segments
-            </Text>
-          </Pressable>
+          {(["blueprint", "list", "comments", "rfis"] as const).map((v) => {
+            const cfg = {
+              blueprint: { icon: "map" as const, label: "Blueprint", testID: "view-toggle-blueprint" },
+              list:      { icon: "list" as const, label: "Segments",  testID: "view-toggle-list" },
+              comments:  { icon: "message-circle" as const, label: "Comments", testID: "view-toggle-comments" },
+              rfis:      { icon: "file-text" as const, label: "RFIs",  testID: "view-toggle-rfis" },
+            }[v];
+            const active = view === v;
+            return (
+              <Pressable
+                key={v}
+                testID={cfg.testID}
+                onPress={() => {
+                  if (!active && Platform.OS !== "web") Haptics.selectionAsync();
+                  setView(v);
+                }}
+                style={[styles.toggleBtn, active && { backgroundColor: colors.card }]}
+              >
+                <Feather name={cfg.icon} size={13} color={active ? colors.primary : colors.mutedForeground} />
+                <Text style={[styles.toggleBtnText, { color: active ? colors.primary : colors.mutedForeground, fontSize: 12 }]}>
+                  {cfg.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         <View style={{ padding: 16, paddingBottom: 32, gap: 12 }}>
           {tabMode === "office" ? (
             <EstimateView projectId={projectId} />
+          ) : view === "comments" ? (
+            <CommentsView projectId={projectId} />
+          ) : view === "rfis" ? (
+            <RFIsView projectId={projectId} />
           ) : !hasBlueprints ? (
             <View
               style={[

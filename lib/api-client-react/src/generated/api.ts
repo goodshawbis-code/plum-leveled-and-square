@@ -22,7 +22,9 @@ import type {
   CreateBlueprintBody,
   CreateMaterialBody,
   CreateProjectBody,
+  CreateRfiBody,
   CreateSegmentBody,
+  CreateSiteCommentBody,
   CreateVendorBody,
   DashboardSummary,
   ErrorResponse,
@@ -32,11 +34,14 @@ import type {
   ProjectEstimate,
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
+  Rfi,
   Segment,
   SegmentPhoto,
+  SiteComment,
   UpdateBidBody,
   UpdateMaterialBody,
   UpdateProjectBody,
+  UpdateRfiBody,
   UpdateSegmentBody,
   UpdateSegmentFieldBody,
   UpdateVendorBody,
@@ -3025,4 +3030,682 @@ export const useRequestUploadUrl = <
   TContext
 > => {
   return useMutation(getRequestUploadUrlMutationOptions(options));
+};
+
+/**
+ * @summary List comments for a project
+ */
+export const getListProjectCommentsUrl = (id: number) => {
+  return `/api/projects/${id}/comments`;
+};
+
+export const listProjectComments = async (
+  id: number,
+  options?: RequestInit,
+): Promise<SiteComment[]> => {
+  return customFetch<SiteComment[]>(getListProjectCommentsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListProjectCommentsQueryKey = (id: number) => {
+  return [`/api/projects/${id}/comments`] as const;
+};
+
+export const getListProjectCommentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectComments>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listProjectComments>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListProjectCommentsQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listProjectComments>>
+  > = ({ signal }) => listProjectComments(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listProjectComments>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListProjectCommentsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectComments>>
+>;
+export type ListProjectCommentsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List comments for a project
+ */
+
+export function useListProjectComments<
+  TData = Awaited<ReturnType<typeof listProjectComments>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listProjectComments>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListProjectCommentsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a site comment
+ */
+export const getCreateCommentUrl = (id: number) => {
+  return `/api/projects/${id}/comments`;
+};
+
+export const createComment = async (
+  id: number,
+  createSiteCommentBody: CreateSiteCommentBody,
+  options?: RequestInit,
+): Promise<SiteComment> => {
+  return customFetch<SiteComment>(getCreateCommentUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createSiteCommentBody),
+  });
+};
+
+export const getCreateCommentMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createComment>>,
+    TError,
+    { id: number; data: BodyType<CreateSiteCommentBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createComment>>,
+  TError,
+  { id: number; data: BodyType<CreateSiteCommentBody> },
+  TContext
+> => {
+  const mutationKey = ["createComment"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createComment>>,
+    { id: number; data: BodyType<CreateSiteCommentBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return createComment(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateCommentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createComment>>
+>;
+export type CreateCommentMutationBody = BodyType<CreateSiteCommentBody>;
+export type CreateCommentMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a site comment
+ */
+export const useCreateComment = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createComment>>,
+    TError,
+    { id: number; data: BodyType<CreateSiteCommentBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createComment>>,
+  TError,
+  { id: number; data: BodyType<CreateSiteCommentBody> },
+  TContext
+> => {
+  return useMutation(getCreateCommentMutationOptions(options));
+};
+
+/**
+ * @summary Delete a comment
+ */
+export const getDeleteCommentUrl = (id: number) => {
+  return `/api/comments/${id}`;
+};
+
+export const deleteComment = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteCommentUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteCommentMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteComment>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteComment>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteComment"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteComment>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteComment(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteCommentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteComment>>
+>;
+
+export type DeleteCommentMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a comment
+ */
+export const useDeleteComment = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteComment>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteComment>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteCommentMutationOptions(options));
+};
+
+/**
+ * @summary List RFIs for a project
+ */
+export const getListProjectRfisUrl = (id: number) => {
+  return `/api/projects/${id}/rfis`;
+};
+
+export const listProjectRfis = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Rfi[]> => {
+  return customFetch<Rfi[]>(getListProjectRfisUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListProjectRfisQueryKey = (id: number) => {
+  return [`/api/projects/${id}/rfis`] as const;
+};
+
+export const getListProjectRfisQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectRfis>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listProjectRfis>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListProjectRfisQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectRfis>>> = ({
+    signal,
+  }) => listProjectRfis(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listProjectRfis>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListProjectRfisQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectRfis>>
+>;
+export type ListProjectRfisQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List RFIs for a project
+ */
+
+export function useListProjectRfis<
+  TData = Awaited<ReturnType<typeof listProjectRfis>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listProjectRfis>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListProjectRfisQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create an RFI (field to office)
+ */
+export const getCreateRfiUrl = (id: number) => {
+  return `/api/projects/${id}/rfis`;
+};
+
+export const createRfi = async (
+  id: number,
+  createRfiBody: CreateRfiBody,
+  options?: RequestInit,
+): Promise<Rfi> => {
+  return customFetch<Rfi>(getCreateRfiUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createRfiBody),
+  });
+};
+
+export const getCreateRfiMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createRfi>>,
+    TError,
+    { id: number; data: BodyType<CreateRfiBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createRfi>>,
+  TError,
+  { id: number; data: BodyType<CreateRfiBody> },
+  TContext
+> => {
+  const mutationKey = ["createRfi"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createRfi>>,
+    { id: number; data: BodyType<CreateRfiBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return createRfi(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateRfiMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createRfi>>
+>;
+export type CreateRfiMutationBody = BodyType<CreateRfiBody>;
+export type CreateRfiMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create an RFI (field to office)
+ */
+export const useCreateRfi = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createRfi>>,
+    TError,
+    { id: number; data: BodyType<CreateRfiBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createRfi>>,
+  TError,
+  { id: number; data: BodyType<CreateRfiBody> },
+  TContext
+> => {
+  return useMutation(getCreateRfiMutationOptions(options));
+};
+
+/**
+ * @summary Get an RFI
+ */
+export const getGetRfiUrl = (id: number) => {
+  return `/api/rfis/${id}`;
+};
+
+export const getRfi = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Rfi> => {
+  return customFetch<Rfi>(getGetRfiUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRfiQueryKey = (id: number) => {
+  return [`/api/rfis/${id}`] as const;
+};
+
+export const getGetRfiQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRfi>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getRfi>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRfiQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRfi>>> = ({
+    signal,
+  }) => getRfi(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getRfi>>, TError, TData> & {
+    queryKey: QueryKey;
+  };
+};
+
+export type GetRfiQueryResult = NonNullable<Awaited<ReturnType<typeof getRfi>>>;
+export type GetRfiQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get an RFI
+ */
+
+export function useGetRfi<
+  TData = Awaited<ReturnType<typeof getRfi>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getRfi>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRfiQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update an RFI (office responds)
+ */
+export const getUpdateRfiUrl = (id: number) => {
+  return `/api/rfis/${id}`;
+};
+
+export const updateRfi = async (
+  id: number,
+  updateRfiBody: UpdateRfiBody,
+  options?: RequestInit,
+): Promise<Rfi> => {
+  return customFetch<Rfi>(getUpdateRfiUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateRfiBody),
+  });
+};
+
+export const getUpdateRfiMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateRfi>>,
+    TError,
+    { id: number; data: BodyType<UpdateRfiBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateRfi>>,
+  TError,
+  { id: number; data: BodyType<UpdateRfiBody> },
+  TContext
+> => {
+  const mutationKey = ["updateRfi"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateRfi>>,
+    { id: number; data: BodyType<UpdateRfiBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateRfi(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateRfiMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateRfi>>
+>;
+export type UpdateRfiMutationBody = BodyType<UpdateRfiBody>;
+export type UpdateRfiMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update an RFI (office responds)
+ */
+export const useUpdateRfi = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateRfi>>,
+    TError,
+    { id: number; data: BodyType<UpdateRfiBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateRfi>>,
+  TError,
+  { id: number; data: BodyType<UpdateRfiBody> },
+  TContext
+> => {
+  return useMutation(getUpdateRfiMutationOptions(options));
+};
+
+/**
+ * @summary Delete an RFI
+ */
+export const getDeleteRfiUrl = (id: number) => {
+  return `/api/rfis/${id}`;
+};
+
+export const deleteRfi = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteRfiUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteRfiMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteRfi>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteRfi>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteRfi"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteRfi>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteRfi(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteRfiMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteRfi>>
+>;
+
+export type DeleteRfiMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete an RFI
+ */
+export const useDeleteRfi = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteRfi>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteRfi>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteRfiMutationOptions(options));
 };

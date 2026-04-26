@@ -10,6 +10,8 @@ import estimatesRouter from "./estimates";
 import dashboardRouter from "./dashboard";
 import storageRouter from "./storage";
 import stripeRouter from "./stripe";
+import commentsRouter from "./comments";
+import rfisRouter from "./rfis";
 
 const router: IRouter = Router();
 
@@ -24,5 +26,7 @@ router.use(bidsRouter);
 router.use(estimatesRouter);
 router.use(dashboardRouter);
 router.use(storageRouter);
+router.use(commentsRouter);
+router.use(rfisRouter);
 
 export default router;

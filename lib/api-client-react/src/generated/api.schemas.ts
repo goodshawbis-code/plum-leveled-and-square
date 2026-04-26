@@ -323,6 +323,130 @@ export interface RequestUploadUrlResponse {
   objectPath: string;
 }
 
+export type SiteCommentPinType =
+  (typeof SiteCommentPinType)[keyof typeof SiteCommentPinType];
+
+export const SiteCommentPinType = {
+  gps: "gps",
+  blueprint: "blueprint",
+  none: "none",
+} as const;
+
+export interface SiteComment {
+  id: number;
+  projectId: number;
+  segmentId?: number | null;
+  blueprintId?: number | null;
+  authorName: string;
+  content: string;
+  pinType: SiteCommentPinType;
+  blueprintX?: number | null;
+  blueprintY?: number | null;
+  locationLat?: number | null;
+  locationLng?: number | null;
+  locationLabel?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateSiteCommentBodyPinType =
+  (typeof CreateSiteCommentBodyPinType)[keyof typeof CreateSiteCommentBodyPinType];
+
+export const CreateSiteCommentBodyPinType = {
+  gps: "gps",
+  blueprint: "blueprint",
+  none: "none",
+} as const;
+
+export interface CreateSiteCommentBody {
+  segmentId?: number;
+  blueprintId?: number;
+  authorName?: string;
+  content: string;
+  pinType?: CreateSiteCommentBodyPinType;
+  blueprintX?: number;
+  blueprintY?: number;
+  locationLat?: number;
+  locationLng?: number;
+  locationLabel?: string;
+}
+
+export type RfiPriority = (typeof RfiPriority)[keyof typeof RfiPriority];
+
+export const RfiPriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  urgent: "urgent",
+} as const;
+
+export type RfiStatus = (typeof RfiStatus)[keyof typeof RfiStatus];
+
+export const RfiStatus = {
+  open: "open",
+  answered: "answered",
+  closed: "closed",
+} as const;
+
+export interface Rfi {
+  id: number;
+  projectId: number;
+  segmentId?: number | null;
+  rfiNumber: number;
+  title: string;
+  description: string;
+  priority: RfiPriority;
+  status: RfiStatus;
+  submittedBy: string;
+  response?: string | null;
+  respondedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateRfiBodyPriority =
+  (typeof CreateRfiBodyPriority)[keyof typeof CreateRfiBodyPriority];
+
+export const CreateRfiBodyPriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  urgent: "urgent",
+} as const;
+
+export interface CreateRfiBody {
+  segmentId?: number;
+  title: string;
+  description: string;
+  priority?: CreateRfiBodyPriority;
+  submittedBy?: string;
+}
+
+export type UpdateRfiBodyStatus =
+  (typeof UpdateRfiBodyStatus)[keyof typeof UpdateRfiBodyStatus];
+
+export const UpdateRfiBodyStatus = {
+  open: "open",
+  answered: "answered",
+  closed: "closed",
+} as const;
+
+export type UpdateRfiBodyPriority =
+  (typeof UpdateRfiBodyPriority)[keyof typeof UpdateRfiBodyPriority];
+
+export const UpdateRfiBodyPriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  urgent: "urgent",
+} as const;
+
+export interface UpdateRfiBody {
+  status?: UpdateRfiBodyStatus;
+  response?: string;
+  priority?: UpdateRfiBodyPriority;
+}
+
 export type UploadSegmentPhotoBody = {
   photo: Blob;
   caption?: string;

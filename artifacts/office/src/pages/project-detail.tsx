@@ -23,7 +23,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, FileImage, Image as ImageIcon, Calculator, ArrowLeft, Maximize, Layers, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, FileImage, Image as ImageIcon, Calculator, ArrowLeft, Maximize, Layers, CheckCircle2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -163,6 +163,10 @@ export default function ProjectDetail() {
             title="Delete project"
           >
             <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" onClick={() => setLocation(`/projects/${projectId}/rfis`)} data-testid="button-field-comms">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Field Comms
           </Button>
           <Button onClick={() => setLocation(`/projects/${projectId}/estimate`)} data-testid="button-view-estimate">
             <Calculator className="mr-2 h-4 w-4" />

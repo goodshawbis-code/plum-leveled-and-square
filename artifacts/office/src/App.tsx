@@ -15,6 +15,7 @@ import ProjectEstimate from "@/pages/project-estimate";
 import SegmentDetail from "@/pages/segment-detail";
 import Subscribe from "@/pages/subscribe";
 import MaterialCalculator from "@/pages/material-calculator";
+import ProjectRFIs from "@/pages/project-rfis";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ function Router() {
         <Route path="/projects/:id/segments/:segId" component={SegmentDetail} />
         <Route path="/materials" component={Materials} />
         <Route path="/vendors" component={Vendors} />
+        <Route path="/projects/:id/rfis" component={ProjectRFIs} />
         <Route path="/calculator" component={MaterialCalculator} />
         <Route component={NotFound} />
       </Switch>
