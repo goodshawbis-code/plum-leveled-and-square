@@ -16,6 +16,8 @@ import SegmentDetail from "@/pages/segment-detail";
 import Subscribe from "@/pages/subscribe";
 import MaterialCalculator from "@/pages/material-calculator";
 import ProjectRFIs from "@/pages/project-rfis";
+import AdminLicenses from "@/pages/admin-licenses";
+import MasonryBid from "@/pages/masonry-bid";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +36,8 @@ function Router() {
         <Route path="/vendors" component={Vendors} />
         <Route path="/projects/:id/rfis" component={ProjectRFIs} />
         <Route path="/calculator" component={MaterialCalculator} />
+        <Route path="/masonry-bid" component={MasonryBid} />
+        <Route path="/admin/licenses" component={AdminLicenses} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

@@ -2,6 +2,7 @@ import { runMigrations } from "stripe-replit-sync";
 import { getStripeSync } from "./stripeClient";
 import app from "./app";
 import { logger } from "./lib/logger";
+import { startLicenseCron } from "./lib/licenseCron";
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -53,4 +54,5 @@ app.listen(port, (err) => {
     process.exit(1);
   }
   logger.info({ port }, "Server listening");
+  startLicenseCron();
 });

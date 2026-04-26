@@ -7,6 +7,8 @@ import {
   Menu,
   CreditCard,
   Calculator,
+  Hammer,
+  Key,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
@@ -17,8 +19,10 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/calculator", label: "Calculator", icon: Calculator },
+  { href: "/masonry-bid", label: "Masonry Bid", icon: Hammer },
   { href: "/materials", label: "Materials", icon: PackageSearch },
   { href: "/vendors", label: "Vendors", icon: Users2 },
+  { href: "/admin/licenses", label: "Licenses", icon: Key },
   { href: "/subscribe", label: "Subscribe", icon: CreditCard },
 ];
 

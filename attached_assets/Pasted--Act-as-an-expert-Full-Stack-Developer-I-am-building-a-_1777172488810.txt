@@ -1,0 +1,19 @@
+> Act as an expert Full-Stack Developer. I am building a SaaS application called "Plumb Leveled and Square" for masonry and construction bidding. I need you to implement three major features into my current Replit project: a Temporary License System, an Automated Email Warning System, and a Specialized Masonry Pricing Module.
+> Please generate the necessary backend logic, database schema updates, and frontend UI components for the following requirements:
+> **1. Admin Temporary License System (Role-Based Access)**
+>  * **Admin Dashboard:** Create an interface where I (the Admin) can generate a temporary access license to invite a General Contractor or Client to the platform.
+>  * **Access Control:** The system must grant the GC/Client full access to view their specific project communications and files.
+>  * **Expiration:** I need the ability to set a specific expiration date for this license (tied to the end of the job). Once the expiration date passes, their login should immediately be restricted, prompting them to purchase a subscription to regain access.
+> **2. Automated 7-Day Warning Email (Cron Job)**
+>  * **Background Task:** Implement a scheduled cron job or background worker that runs daily to check all active temporary licenses.
+>  * **Email Trigger:** If a license is exactly 7 days away from expiring, automatically send an email to the client.
+>  * **Email Content:** The email should clearly state: "Your temporary project access will expire in 7 days. Please log in to download and retain any project files, bids, or communication history you need for your records. After 7 days, your access will be restricted unless a subscription is purchased." (Set this up using a standard email provider like Nodemailer, Resend, or SendGrid).
+> **3. Competitive Masonry Pricing Module**
+>  * **Pricing Database:** Create a data structure to handle competitive masonry pricing for the Pacific Northwest market (specifically Portland/Beaverton/Hillsboro rates).
+>  * **Targeted Niches:** The pricing calculator must be explicitly calibrated for:
+>    * Residential developments.
+>    * Small commercial buildings (strictly 2 stories or less).
+>    * Backyard outdoor living space enhancements (e.g., outdoor kitchens, custom patios, fire pits).
+>  * **Logic:** Build a calculation function that pulls these competitive regional rates and applies them to material takeoffs (like CMU, concrete footings, split-face brick) to generate highly accurate, market-competitive bids.
+> Please outline the database schema changes first, then write the code for the background email task, the admin license UI, and finally the pricing calculation logic.
+>use the built-in PostgreSQL database that is perfect for this) and which email service I want to use. **Resend** or **SendGrid**, 
