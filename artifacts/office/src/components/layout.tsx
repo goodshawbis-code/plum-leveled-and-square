@@ -6,6 +6,7 @@ import {
   Users2,
   Menu,
   CreditCard,
+  Calculator,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
@@ -15,6 +16,7 @@ import { TrialBanner } from "./TrialBanner";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/calculator", label: "Calculator", icon: Calculator },
   { href: "/materials", label: "Materials", icon: PackageSearch },
   { href: "/vendors", label: "Vendors", icon: Users2 },
   { href: "/subscribe", label: "Subscribe", icon: CreditCard },

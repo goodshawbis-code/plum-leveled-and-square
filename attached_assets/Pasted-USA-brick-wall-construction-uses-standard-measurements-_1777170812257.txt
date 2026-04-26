@@ -1,0 +1,43 @@
+USA brick wall construction uses standard measurements to determine material needs, typically requiring 7 bricks per square foot for a single-wythe wall (including standard 3/8-inch mortar joints). Standard US Modular bricks are $7\frac{5}{8}\text{''}$ x $2\frac{1}{4}\text{''}$ x $3\frac{5}{8}\text{''}$ (actual size), but are calculated using a nominal size of 8'' x 2\frac{2}{3}\text{''}$ to account for mortar. [1, 2, 3, 4, 5]  
+Standard US Brick Calculations 
+
+• Brick Size (Nominal): Most common is the modular brick, treated as 8" long x 2-2/3" high, resulting in 6.75 to 7 bricks per square foot. 
+• Mortar Joint: Standard width is 3/8-inch. 
+• Wall Coverage: Single-skin/wythe walls (4 inches thick) require ~7 bricks per sq ft; double-skin/wythe walls require ~14 bricks per sq ft. 
+• Waste Factor: Always add 10% to the final, calculated brick total to account for breakage. [1, 4, 6, 7, 8]  
+
+Calculation Steps (Area Method) 
+
+1. Calculate Wall Area: $\text{Length} \times \text{Height (in feet)}$. 
+2. Deduct Openings: Subtract area of windows and doors. 
+3. Multiply by Coverage: $\text{Total Net Sq Ft} \times 7$. 
+4. Add Waste: $\text{Total Bricks} \times 1.10$. [1, 6, 9, 10, 11]  
+
+Standard Brick Types (USA) 
+
+• Modular: 7 5/8" x 2 1/4" x 3 5/8" (Actual). 
+• King Size: 9 5/8" x 2 5/8" x 3 5/8" (Approx). 
+• Utility: 11 5/8" x 2 5/8" x 3 5/8" (Approx). [2, 4, 6]  
+
+Using ASTM standards ensures bricks meet size tolerances. [12]  
+To help me provide the most relevant advice, are you: 
+
+• Doing a new installation or a repair? 
+• Looking to calculate materials or looking for design/layout advice? 
+• Building a single-wythe (4") or double-wythe (8") wall? 
+
+AI responses may include mistakes.
+
+[1] https://www.youtube.com/watch?v=8h0rfvueKSw
+[2] https://www.facebook.com/CivilEngineerhelp/posts/standard-dimensions-of-bricksstandard-brick-size-in-the-us-and-many-other-countr/1102331658691397/
+[3] https://www.brickofchicago.com/learn
+[4] https://calculator.goldsupplier.com/brick-calculator/
+[5] https://www.block-machine.net/brick-per-square-foot/
+[6] https://www.block-machine.net/brick-per-square-foot/
+[7] https://www.dimensions.com/element/brick-standard-usa
+[8] https://meskerdoor.com/wp-content/uploads/2016/03/SDI_110.pdf
+[9] https://designestimation.com/brick-cost-estimator-article/
+[10] https://www.coohom.com/article/calculation-of-bricks-in-wall-a-step-by-step-guide
+[11] https://www.block-machine.net/brick-per-square-foot/
+[12] https://www.gobrick.com/media/file/10-dimensioning-and-estimating-brick-masonry.pdf
+

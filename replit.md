@@ -81,6 +81,20 @@ Segment `x`, `y`, `width`, `height` are stored as **percentage values (0–100)*
 | GET | `/storage/objects/*` | Serve private files |
 | GET | `/storage/static/*` | Serve local static files from `artifacts/api-server/static/` (blueprint images) |
 
+## Material Calculator (Office App — /calculator)
+
+A standalone takeoff calculator accessible from the Office app sidebar:
+
+- **CMU Block** — Standard 8", 6", 12", Split Face, Half High, or Custom dimensions. Calculates blocks/SF using the standard modular formula (12/nomL × 12/nomH), courses, and quantity with waste.
+- **Brick** — Standard Modular, King Size, Utility, Queen, or Custom. Accounts for single- or double-wythe construction. 10% waste default (per ASTM/industry standard).
+- **Natural Stone** — 8 Oregon-specific presets (Basalt, Columbia River Basalt Ledge, Fieldstone, Granite, Limestone, Sandstone, Cultured Stone, Flagstone) with 2024–25 Pacific Northwest material and installed price ranges. Custom pricing available.
+- **Custom** — Any unit with actual length/height + mortar joint input. Useful for cultured stone panels, irregular masonry, or non-standard CMU.
+- All modes support door/window opening deductions and an overrideable waste factor.
+
+Key files:
+- `artifacts/office/src/lib/masonry-calculator.ts` — pure calculation utilities (no React)
+- `artifacts/office/src/pages/material-calculator.tsx` — UI page
+
 ## Key Commands
 
 - `pnpm run typecheck` — full typecheck across all packages
