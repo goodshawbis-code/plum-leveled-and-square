@@ -1,0 +1,17 @@
+
+
+> "This is looking great. Now, I need to implement a 'Smart Assemblies' system to ensure no materials are forgotten during the bidding process, as well as a comprehensive Safety Management Module for the field crews.
+> Please update the project with the following three features:
+> **1. Smart Material Assemblies (Auto-Inclusions):**
+>  * Modify the bidding engine so that selecting a primary material automatically suggests or includes necessary accessories.
+>  * **Concrete/Foundation Trigger:** When 'Footings' or 'Concrete' is added, the system must automatically prompt the user to include: Rebar Chairs, Tie Wire, and Form Release Oil.
+>  * **Masonry/CMU Trigger:** When 'CMU' or 'Brick Veneer' is added, the system must automatically prompt for: Scaffolding Leveling Jacks, Flashing, Angle Irons, Weep Holes, and Mortar Netting.
+> **2. Washington & Oregon Code Compliance Checklist:**
+>  * Add a mandatory pre-bid checklist for masonry adhering to structures in WA and OR.
+>  * It must force the user to verify quantities for: Seismic Wall Ties, specialized anchoring systems, and moisture-barrier flashing protocols before the bid can be finalized.
+> **3. The Foreman's Safety Hub (Field UI):**
+>  * **Weekly Safety Topic (Toolbox Talk):** Create a dashboard where the Admin/Office can write and publish a 'Safety Topic of the Week'. This must push to a Foreman's mobile-friendly view. Include a button for the Foreman to click 'Discussed with Crew' which timestamps the log for the office.
+>  * **Daily Safety Check-Off:** Add a digital JHA (Job Hazard Analysis) checklist for the Foreman to complete daily before work begins (checking things like scaffolding stability, PPE, and trench safety).
+> Please update the database schema to link 'Accessory Items' to 'Primary Materials', and generate the frontend UI for the new Foreman Safety Hub."
+> 
+add a line item for **"Washout/Pump Fee"** if the concrete volume exceeds a certain amount. It’s a common cost in our area that often gets missed in basic 

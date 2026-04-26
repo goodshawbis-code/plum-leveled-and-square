@@ -14,6 +14,7 @@ import commentsRouter from "./comments";
 import rfisRouter from "./rfis";
 import licensesRouter from "./licenses";
 import blueprintAnalysisRouter from "./blueprintAnalysis";
+import safetyRouter from "./safety";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(commentsRouter);
 router.use(rfisRouter);
 router.use(licensesRouter);
 router.use(blueprintAnalysisRouter);
+router.use(safetyRouter);
 
 export default router;

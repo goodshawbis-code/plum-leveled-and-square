@@ -7,8 +7,9 @@ export function cn(...inputs: ClassValue[]) {
 
 const BASE = import.meta.env.BASE_URL;
 
-export function getApiUrl(path: string): string {
+export function getApiUrl(path?: string): string {
   const base = BASE.endsWith("/") ? BASE.slice(0, -1) : BASE;
+  if (!path) return base;
   const p = path.startsWith("/") ? path : `/${path}`;
   return `${base}${p}`;
 }

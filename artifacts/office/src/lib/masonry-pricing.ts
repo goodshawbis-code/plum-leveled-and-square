@@ -190,6 +190,134 @@ export const PORTLAND_PRICING: Record<MaterialType, PricingRate> = {
   },
 };
 
+export interface AccessoryItem {
+  id: string;
+  label: string;
+  unit: string;
+  unitCostLow: number;
+  unitCostHigh: number;
+  defaultQuantityFactor: number;
+  quantityBasis: string;
+  notes: string;
+}
+
+export interface AssemblyTrigger {
+  id: string;
+  label: string;
+  triggeringMaterials: MaterialType[];
+  accessories: AccessoryItem[];
+}
+
+export const WASHOUT_PUMP_THRESHOLD_LF = 60;
+
+export const ASSEMBLY_TRIGGERS: AssemblyTrigger[] = [
+  {
+    id: "concrete_assembly",
+    label: "Concrete / Foundation Accessories",
+    triggeringMaterials: ["concrete_footing"],
+    accessories: [
+      {
+        id: "rebar_chairs",
+        label: "Rebar Chairs (Plastic)",
+        unit: "EA",
+        unitCostLow: 0.35,
+        unitCostHigh: 0.60,
+        defaultQuantityFactor: 4,
+        quantityBasis: "per LF of footing (approx. 4 chairs/LF)",
+        notes: "Maintains rebar clearance per IBC. Typ. 2\" or 3\" height. Required by OR/WA code.",
+      },
+      {
+        id: "tie_wire",
+        label: "Tie Wire (16-ga Black Annealed)",
+        unit: "LB",
+        unitCostLow: 1.80,
+        unitCostHigh: 2.50,
+        defaultQuantityFactor: 0.10,
+        quantityBasis: "per LF of footing (approx. 0.1 lb/LF)",
+        notes: "Used to secure rebar intersections. One spool (3.5 lb) typically covers 35 LF of footing.",
+      },
+      {
+        id: "form_release",
+        label: "Form Release Oil",
+        unit: "GAL",
+        unitCostLow: 18,
+        unitCostHigh: 28,
+        defaultQuantityFactor: 0.05,
+        quantityBasis: "per LF of footing (approx. 0.05 gal/LF)",
+        notes: "Applied to forms before pour to prevent concrete adhesion. Product: Cresset Chemtool, W-1, or equivalent.",
+      },
+    ],
+  },
+  {
+    id: "masonry_assembly",
+    label: "CMU / Masonry Accessories",
+    triggeringMaterials: ["cmu_standard", "cmu_splitface", "brick_standard", "brick_splitface", "culture_stone"],
+    accessories: [
+      {
+        id: "leveling_jacks",
+        label: "Scaffolding Leveling Jacks",
+        unit: "EA",
+        unitCostLow: 42,
+        unitCostHigh: 68,
+        defaultQuantityFactor: 0.02,
+        quantityBasis: "per SF of wall (approx. 1 jack per 50 SF)",
+        notes: "Adjustable base jacks for pump-up / frame scaffolding. Required for walls over 8 ft.",
+      },
+      {
+        id: "flashing",
+        label: "Through-Wall Flashing (Copper or TPO)",
+        unit: "LF",
+        unitCostLow: 4.50,
+        unitCostHigh: 7.00,
+        defaultQuantityFactor: 0.15,
+        quantityBasis: "per SF of wall (approx. 0.15 LF/SF for base + ledge runs)",
+        notes: "Required at all ledge/base conditions per OR/WA moisture management code. Add 20% for corners.",
+      },
+      {
+        id: "angle_irons",
+        label: "Angle Irons / Shelf Angles (A36 Steel)",
+        unit: "LF",
+        unitCostLow: 12,
+        unitCostHigh: 20,
+        defaultQuantityFactor: 0.05,
+        quantityBasis: "per SF of wall (varies by floor-to-floor height)",
+        notes: "Structural shelf angles at floor lines for multi-story masonry veneer. Requires eng. stamp in OR/WA.",
+      },
+      {
+        id: "weep_holes",
+        label: "Weep Holes / Open-Head Joints",
+        unit: "EA",
+        unitCostLow: 2.50,
+        unitCostHigh: 4.00,
+        defaultQuantityFactor: 0.05,
+        quantityBasis: "per SF of wall (approx. 1 weep per 2 ft of base)",
+        notes: "Allows moisture to drain from cavity. OR/WA code requires at base of each wythe and above flashings.",
+      },
+      {
+        id: "mortar_netting",
+        label: "Mortar Collection Net (Cavity Mortar Guard)",
+        unit: "SF",
+        unitCostLow: 0.75,
+        unitCostHigh: 1.25,
+        defaultQuantityFactor: 1.0,
+        quantityBasis: "per SF of wall",
+        notes: "Prevents mortar droppings from blocking weep holes. Recommended in OR/WA due to high moisture exposure.",
+      },
+    ],
+  },
+];
+
+export const WASHOUT_PUMP_FEE: AccessoryItem = {
+  id: "washout_pump",
+  label: "Concrete Washout / Pump Fee",
+  unit: "EA",
+  unitCostLow: 450,
+  unitCostHigh: 850,
+  defaultQuantityFactor: 1,
+  quantityBasis: "flat fee per pour event (triggered when footing > 60 LF)",
+  notes: "Required for concrete pump truck mobilization + washout compliance. Portland/Beaverton area typical range. Add $150–250 if extended-boom pump required.",
+};
+
 export const PROJECT_TYPE_DEFAULT_MATERIALS: Record<ProjectType, MaterialType[]> = {
   residential: ["culture_stone", "cmu_standard", "concrete_footing", "rebar", "grout_fill", "mortar"],
   commercial: ["cmu_splitface", "concrete_footing", "rebar", "grout_fill", "mortar"],

@@ -10,3 +10,4 @@ export * from "./users";
 export * from "./site_comments";
 export * from "./rfis";
 export * from "./temp_licenses";
+export * from "./safety_topics";
