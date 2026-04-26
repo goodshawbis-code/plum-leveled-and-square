@@ -13,6 +13,7 @@ import {
   BookOpen,
   Lock,
   MessageSquare,
+  ScanLine,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/vendors", label: "Vendors", icon: Users2 },
   { href: "/admin/licenses", label: "Licenses", icon: Key },
   { href: "/safety", label: "Safety Hub", icon: ShieldCheck },
+  { href: "/blueprint-bid", label: "Blueprint AI Bid", icon: ScanLine },
   { href: "/compliance-vault", label: "Compliance Vault", icon: Lock },
   { href: "/field-chat", label: "Field Chat", icon: MessageSquare },
   { href: "/help", label: "Help Center", icon: BookOpen },

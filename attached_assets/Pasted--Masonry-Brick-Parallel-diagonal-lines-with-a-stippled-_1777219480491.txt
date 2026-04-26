@@ -1,0 +1,25 @@
+>  * **Masonry (Brick):** Parallel diagonal lines with a 'stippled' or 'dotted' texture.
+>  * **CMU (Block):** Hollow rectangles or diagonal cross-hatching (45^\circ).
+>  * **Wood Studs:** Empty cavities with a single 'X' or parallel lines with no hatching.
+>  * **Concrete Slabs:** Fine stippling (dots) and a solid boundary line."
+> 
+### 4. Geometric Pattern Recognition (OpenCV Integration)
+While LLMs (like GPT-4o or Gemini) are great at reasoning, **OpenCV** is better at math. Use a hybrid approach in Replit:
+ * **OpenCV:** Use cv2.findContours and HoughLines to identify long straight lines (walls) and closed polygons (slabs).
+ * **AI Vision:** The AI then "tags" those polygons (e.g., "This polygon is the Brick Veneer area").
+ * **The Calculation:** Once the AI identifies the shape, the Python backend calculates the area precisely based on the scale calibration.
+### 5. The "Professionalism" Features (The Competitive Edge)
+To impress a General Contractor, your output must look like it came from a 30-year veteran.
+ * **The Deductions Engine:** Ensure the AI automatically subtracts "Openings" (Windows and Doors) from the square footage. A "rookie" AI will calculate a solid wall; a "pro" AI sees the window and deducts 15\text{ sq ft} of brick.
+ * **The Waste Factor Logic:** * **Brick:** 5\% to 10\% waste based on the bond pattern.
+   * **Concrete:** Add 0.5\text{ yards} for "pump residue" and "spillage."
+ * **Safety Check-Offs:** Automatically pull the "Safety Topic of the Week" based on the project type. If it’s a multi-story block job, the bid should automatically include **Scaffold Safety Protocols** and **OSHA fall protection** line items.
+### Implementation Action Plan for Replit:
+ 1. **Phase 1:** Build the **Scale Calibration Tool** (Frontend UI).
+ 2. **Phase 2:** Integrate **pdf2image** to convert blueprints to high-res JPG tiles.
+ 3. **Phase 3:** Create a **JSON Schema** for the output. Tell the AI: *"Return only a JSON object with 'material_type', 'quantity', 'unit', and 'confidence_score'."*
+ 4. **Phase 4:** Build the **Bid Generator** using a PDF library like ReportLab to format the final proposal with your logo and legal disclaimers.
+**Next Step:** Would you like the specific Python code for the **Scale Calibration** math or a more detailed **System Prompt** for the AI to handle the "Masonry vs. Wood" identification?
+
+### The Technical Hurdle
+The biggest challenge you'll face is **Scale Accuracy**. If the AI thinks a 1/4" line is 1/8", your whole bid is 50% off. Make sure the first thing the Agent builds is a **"Scale Calibration" tool** where the user can click two points on a known dimension (like a door opening) to confirm the AI is reading the ruler correctly.

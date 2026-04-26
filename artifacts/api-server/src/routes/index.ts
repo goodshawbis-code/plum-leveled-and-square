@@ -18,6 +18,7 @@ import safetyRouter from "./safety";
 import helpRouter from "./help";
 import complianceRouter from "./compliance";
 import chatRouter from "./chat";
+import blueprintPipelineRouter from "./blueprintPipeline";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(safetyRouter);
 router.use(helpRouter);
 router.use(complianceRouter);
 router.use(chatRouter);
+router.use(blueprintPipelineRouter);
 
 export default router;

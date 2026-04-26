@@ -23,6 +23,7 @@ import HelpCenter from "@/pages/help-center";
 import HelpAdmin from "@/pages/help-admin";
 import ComplianceVault from "@/pages/compliance-vault";
 import FieldChat from "@/pages/field-chat";
+import BlueprintBid from "@/pages/blueprint-bid";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ function Router() {
         <Route path="/help-admin" component={HelpAdmin} />
         <Route path="/compliance-vault" component={ComplianceVault} />
         <Route path="/field-chat" component={FieldChat} />
+        <Route path="/blueprint-bid" component={BlueprintBid} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
