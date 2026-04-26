@@ -53,6 +53,24 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="vault"
+        options={{
+          title: "Vault",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="lock" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: "Chat",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="message-square" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",

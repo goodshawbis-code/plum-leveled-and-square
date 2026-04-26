@@ -12,3 +12,5 @@ export * from "./rfis";
 export * from "./temp_licenses";
 export * from "./safety_topics";
 export * from "./help_articles";
+export * from "./compliance_docs";
+export * from "./chat_messages";

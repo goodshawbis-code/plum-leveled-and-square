@@ -16,6 +16,8 @@ import licensesRouter from "./licenses";
 import blueprintAnalysisRouter from "./blueprintAnalysis";
 import safetyRouter from "./safety";
 import helpRouter from "./help";
+import complianceRouter from "./compliance";
+import chatRouter from "./chat";
 
 const router: IRouter = Router();
 
@@ -36,5 +38,7 @@ router.use(licensesRouter);
 router.use(blueprintAnalysisRouter);
 router.use(safetyRouter);
 router.use(helpRouter);
+router.use(complianceRouter);
+router.use(chatRouter);
 
 export default router;
