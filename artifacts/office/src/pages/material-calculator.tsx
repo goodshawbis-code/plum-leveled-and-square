@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { HelpTooltip } from "@/components/HelpTooltip";
 import {
   Calculator,
   Plus,
@@ -206,7 +207,10 @@ export default function MaterialCalculator() {
       <div className="flex items-center gap-3">
         <Calculator className="h-6 w-6 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Material Calculator</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight">Material Calculator</h1>
+            <HelpTooltip articleSlug="material-calculator" />
+          </div>
           <p className="text-muted-foreground text-sm">
             CMU block, brick, and natural stone takeoff — with Oregon regional pricing for natural stone.
           </p>

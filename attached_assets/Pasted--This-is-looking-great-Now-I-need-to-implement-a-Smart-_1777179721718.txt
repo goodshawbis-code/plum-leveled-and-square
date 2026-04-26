@@ -1,0 +1,36 @@
+> "This is looking great. Now, I need to implement a 'Smart Assemblies' system to ensure no materials are forgotten during the bidding process, as well as a comprehensive Safety Management Module for the field crews.
+> Please update the project with the following three features:
+> **1. Smart Material Assemblies (Auto-Inclusions):**
+>  * Modify the bidding engine so that selecting a primary material automatically suggests or includes necessary accessories.
+>  * **Concrete/Foundation Trigger:** When 'Footings' or 'Concrete' is added, the system must automatically prompt the user to include: Rebar Chairs, Tie Wire, and Form Release Oil.
+>  * **Masonry/CMU Trigger:** When 'CMU' or 'Brick Veneer' is added, the system must automatically prompt for: Scaffolding Leveling Jacks, Flashing, Angle Irons, Weep Holes, and Mortar Netting.
+> **2. Washington & Oregon Code Compliance Checklist:**
+>  * Add a mandatory pre-bid checklist for masonry adhering to structures in WA and OR.
+>  * It must force the user to verify quantities for: Seismic Wall Ties, specialized anchoring systems, and moisture-barrier flashing protocols before the bid can be finalized.
+> **3. The Foreman's Safety Hub (Field UI):**
+>  * **Weekly Safety Topic (Toolbox Talk):** Create a dashboard where the Admin/Office can write and publish a 'Safety Topic of the Week'. This must push to a Foreman's mobile-friendly view. Include a button for the Foreman to click 'Discussed with Crew' which timestamps the log for the office.
+>  * **Daily Safety Check-Off:** Add a digital JHA (Job Hazard Analysis) checklist for the Foreman to complete daily before work begins (checking things like scaffolding stability, PPE, and trench safety).
+> Please update the database schema to link 'Accessory Items' to 'Primary Materials', and generate the frontend UI for the new Foreman Safety Hub."
+> 
+### How Replit Will Handle This:
+ * **The "Smart Assemblies":** The AI will change the database so that an item like "Rebar" isn't just a solo item anymore; it becomes a parent item that "owns" children items (Chairs and Tie Wire). When you type in 500 feet of rebar, it will automatically calculate how many chairs and rolls of wire you need.
+ * **The Safety Hub:** It will create a separate view or tab specifically for your field leaders. This keeps the bidding screen clean for the office, while the foremen get a simple, easy-to-read screen for their weekly safety topics and daily checks.
+Do you want the system to require the foremen to actually collect digital signatures from the crew on their phones after discussing that Weekly Safety Topic, or is a simple "Acknowledged" button from the foreman enough to cover your liability?
+
+add a line item for **"Washout/Pump Fee"** if the concrete volume exceeds a certain amount. It’s a common cost in our area that often gets missed in basic bids!
+
+> "To ensure users can navigate the platform as it grows, I need to implement a 'Dynamic Knowledge Base' (In-App Instruction Manual). I need the ability to add, edit, and categorize help articles without altering the application's source code.
+> Please implement the following features:
+> **1. Knowledge Base Database Schema:**
+>  * Create a new table for Help_Articles with the following columns: Title, Content (needs to support Markdown or rich text formatting), Category (e.g., 'Estimating', 'Safety', 'Admin', 'Client Access'), and Role_Access (to ensure GCs only see GC-relevant articles, and Foremen only see Field-relevant articles).
+> **2. Admin Content Management System (CMS):**
+>  * Build an Admin-only UI dashboard to 'Create', 'Edit', and 'Delete' these help articles.
+>  * Include a rich-text or Markdown editor so I can easily add bullet points, bold text, and upload screenshots of the app to the instructions.
+> **3. User-Facing Help Center:**
+>  * Create a clean, searchable 'Help Center' page accessible from the main navigation menu for all users.
+>  * Group the articles automatically by their Category.
+> **4. Contextual Tooltips (In-Line Help):**
+>  * Build a reusable UI component: a small [?] icon.
+>  * Place these icons next to complex features in the app (like the 'Washington/Oregon Code Checklist', 'Temporary License Generator', and the 'Concrete Volume Calculator').
+>  * When a user clicks the [?] icon, it should open a small modal or sidebar displaying the specific help article tied to that feature.
+> Please update the database first, then build the Admin CMS editor, and finally integrate the User Help Center and Tooltips into the existing UI."

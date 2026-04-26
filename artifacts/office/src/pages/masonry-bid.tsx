@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { HelpTooltip } from "@/components/HelpTooltip";
 import {
   Hammer,
   Info,
@@ -457,6 +458,7 @@ export default function MasonryBid() {
                 <CardTitle className={`text-base flex items-center gap-2 ${allComplianceChecked ? "text-green-800" : "text-amber-800"}`}>
                   <ShieldCheck className="h-4 w-4" />
                   Oregon & Washington Code Compliance
+                  <HelpTooltip articleSlug="wa-or-compliance-checklist" className="ml-1" />
                   {allComplianceChecked
                     ? <Badge className="bg-green-100 text-green-800 text-xs"><CheckCircle2 className="h-3 w-3 mr-1" />All verified</Badge>
                     : <Badge className="bg-amber-100 text-amber-800 text-xs"><AlertTriangle className="h-3 w-3 mr-1" />Required before bidding</Badge>

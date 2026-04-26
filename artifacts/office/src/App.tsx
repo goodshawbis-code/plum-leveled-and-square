@@ -19,6 +19,8 @@ import ProjectRFIs from "@/pages/project-rfis";
 import AdminLicenses from "@/pages/admin-licenses";
 import MasonryBid from "@/pages/masonry-bid";
 import SafetyTopics from "@/pages/safety-topics";
+import HelpCenter from "@/pages/help-center";
+import HelpAdmin from "@/pages/help-admin";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,8 @@ function Router() {
         <Route path="/masonry-bid" component={MasonryBid} />
         <Route path="/admin/licenses" component={AdminLicenses} />
         <Route path="/safety" component={SafetyTopics} />
+        <Route path="/help" component={HelpCenter} />
+        <Route path="/help-admin" component={HelpAdmin} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

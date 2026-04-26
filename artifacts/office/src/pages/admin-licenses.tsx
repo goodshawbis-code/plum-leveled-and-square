@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { HelpTooltip } from "@/components/HelpTooltip";
 import {
   Key,
   Plus,
@@ -213,7 +214,10 @@ export default function AdminLicenses() {
         <div className="flex items-center gap-3">
           <Key className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Temporary Licenses</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight">Temporary Licenses</h1>
+              <HelpTooltip articleSlug="temporary-license-generator" />
+            </div>
             <p className="text-muted-foreground text-sm">
               Grant GC and client access to specific projects for a set period.
             </p>

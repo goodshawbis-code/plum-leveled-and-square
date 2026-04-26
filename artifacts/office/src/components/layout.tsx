@@ -10,6 +10,7 @@ import {
   Hammer,
   Key,
   ShieldCheck,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/vendors", label: "Vendors", icon: Users2 },
   { href: "/admin/licenses", label: "Licenses", icon: Key },
   { href: "/safety", label: "Safety Hub", icon: ShieldCheck },
+  { href: "/help", label: "Help Center", icon: BookOpen },
   { href: "/subscribe", label: "Subscribe", icon: CreditCard },
 ];
 
