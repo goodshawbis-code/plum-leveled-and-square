@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "plumb level and Squared",
-    "slug": "field",
+    "name": "Plumb leveled and Squared",
+    "slug": "plumbleveledandsquared",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "field",
+    "scheme": "plumbleveledandsquared",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
@@ -14,9 +14,12 @@
       "backgroundColor": "#020817"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.plumbleveledandsquared.app"
     },
-    "android": {},
+    "android": {
+      "package": "com.plumbleveledandsquared.app"
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
