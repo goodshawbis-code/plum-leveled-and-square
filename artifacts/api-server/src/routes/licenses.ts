@@ -91,9 +91,9 @@ router.post("/admin/licenses", async (req: Request, res: Response) => {
       .returning();
 
     if (body.data.sendInviteEmail) {
-      const domains = process.env.REPLIT_DOMAINS?.split(",") ?? [];
-      const appUrl = domains[0]
-        ? `https://${domains[0]}`
+      const appDomain = process.env.APP_DOMAIN ?? "localhost";
+      const appUrl = appDomain !== "localhost"
+        ? `https://${appDomain}`
         : `http://localhost:${process.env.PORT}`;
 
       const sent = await sendLicenseInviteEmail({
@@ -255,9 +255,9 @@ router.post("/admin/licenses/:id/resend-invite", async (req: Request, res: Respo
       .from(projectsTable)
       .where(eq(projectsTable.id, license.projectId));
 
-    const domains = process.env.REPLIT_DOMAINS?.split(",") ?? [];
-    const appUrl = domains[0]
-      ? `https://${domains[0]}`
+    const appDomain = process.env.APP_DOMAIN ?? "localhost";
+    const appUrl = appDomain !== "localhost"
+      ? `https://${appDomain}`
       : `http://localhost:${process.env.PORT}`;
 
     const sent = await sendLicenseInviteEmail({

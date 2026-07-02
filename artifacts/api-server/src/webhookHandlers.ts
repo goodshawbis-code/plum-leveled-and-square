@@ -1,4 +1,5 @@
-import { getStripeSync } from "./stripeClient";
+import { getUncachableStripeClient } from "./stripeClient";
+import { logger } from "./lib/logger";
 
 export class WebhookHandlers {
   static async processWebhook(payload: Buffer, signature: string): Promise<void> {
@@ -10,7 +11,14 @@ export class WebhookHandlers {
       );
     }
 
-    const sync = await getStripeSync();
-    await sync.processWebhook(payload, signature);
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      throw new Error("STRIPE_WEBHOOK_SECRET environment variable is required.");
+    }
+
+    const stripe = await getUncachableStripeClient();
+    const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+
+    logger.info({ type: event.type, id: event.id }, "Stripe webhook event received");
   }
 }

@@ -1,39 +1,14 @@
-import { runMigrations } from "stripe-replit-sync";
-import { getStripeSync } from "./stripeClient";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { startLicenseCron } from "./lib/licenseCron";
 
 async function initStripe() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL environment variable is required");
-  }
+  const appDomain = process.env.APP_DOMAIN ?? "localhost";
+  const webhookUrl = appDomain === "localhost"
+    ? `http://localhost:${process.env.PORT}/api/stripe/webhook`
+    : `https://${appDomain}/api/stripe/webhook`;
 
-  try {
-    logger.info("Initializing Stripe schema...");
-    await runMigrations({ databaseUrl, schema: "stripe" });
-    logger.info("Stripe schema ready");
-
-    const stripeSync = await getStripeSync();
-
-    const domains = process.env.REPLIT_DOMAINS?.split(",") ?? [];
-    const webhookBaseUrl = domains[0]
-      ? `https://${domains[0]}`
-      : `http://localhost:${process.env.PORT}`;
-    await stripeSync.findOrCreateManagedWebhook(
-      `${webhookBaseUrl}/api/stripe/webhook`,
-    );
-    logger.info("Stripe webhook configured");
-
-    stripeSync
-      .syncBackfill()
-      .then(() => logger.info("Stripe data synced"))
-      .catch((err: any) => logger.error({ err }, "Stripe backfill error"));
-  } catch (error) {
-    logger.error({ err: error }, "Failed to initialize Stripe");
-    throw error;
-  }
+  logger.info({ webhookUrl }, "Stripe webhook URL configured (register manually in Stripe Dashboard)");
 }
 
 const rawPort = process.env["PORT"];
