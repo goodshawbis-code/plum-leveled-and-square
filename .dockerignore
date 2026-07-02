@@ -1,0 +1,48 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build output
+dist
+**/dist
+build
+**/build
+.next
+**/.next
+
+# Version control
+.git
+.gitignore
+
+# Replit artifacts (not needed in Docker)
+.replit
+.replitignore
+.agents
+replit.md
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Large / generated assets
+attached_assets
+uv.lock
+
+# Python virtual envs
+__pycache__
+**/__pycache__
+*.pyc
+.venv
+venv
+
+# Logs and temp files
+*.log
+*.tmp
+.DS_Store
+
+# Expo / mobile build artifacts (not needed for API)
+artifacts/field
+artifacts/ceo-link
+artifacts/mockup-sandbox
+artifacts/office
