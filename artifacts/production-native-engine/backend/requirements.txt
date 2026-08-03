@@ -1,0 +1,25 @@
+# Plumb Leveled & Square — Backend Dependencies
+# Pin major versions; bump minor/patch only after local validation.
+
+# Web framework
+fastapi>=0.111.0,<0.200.0
+uvicorn[standard]>=0.30.0,<1.0.0
+
+# Data validation (Pydantic v2 — required for @field_validator syntax)
+pydantic>=2.7.0,<3.0.0
+
+# Supabase client
+supabase>=2.4.0,<3.0.0
+
+# APNs HTTP/2 push sender
+httpx[http2]>=0.27.0,<1.0.0
+PyJWT>=2.8.0,<3.0.0
+cryptography>=42.0.0,<44.0.0   # ES256 signing for APNs JWT
+
+# Environment config
+python-dotenv>=1.0.0,<2.0.0
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+httpx>=0.27.0                   # also used by TestClient
