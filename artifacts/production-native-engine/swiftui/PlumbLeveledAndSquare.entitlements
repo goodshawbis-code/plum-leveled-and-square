@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  PlumbLeveledAndSquare.entitlements
+  Plumb Leveled & Square
+
+  HOW TO WIRE IN XCODE:
+    Target → Signing & Capabilities → + Capability → Push Notifications.
+    Xcode creates/merges this file automatically; the key below is what it inserts.
+
+  aps-environment values:
+    "development" — sandbox APNs server; used for debug builds & ad-hoc TestFlight.
+    "production"  — live APNs server; used for App Store release builds.
+    Xcode injects the correct value per build configuration when the capability is on.
+
+  Team ID  : J63873JACF
+  Bundle   : com.brickoutdoorliving.plumbleveledandsquare
+-->
+<plist version="1.0">
+<dict>
+
+    <!-- Apple Push Notification service (REQUIRED for remote push) -->
+    <key>aps-environment</key>
+    <string>development</string>
+
+    <!-- StoreKit 2 / SubscriptionStoreView (group ID 22248676) -->
+    <key>com.apple.developer.in-app-payments</key>
+    <array/>
+
+</dict>
+</plist>
