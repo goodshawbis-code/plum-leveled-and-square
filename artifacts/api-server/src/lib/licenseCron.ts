@@ -53,7 +53,7 @@ export async function checkExpiringLicenses(): Promise<void> {
         daysUntilExpiry,
       });
 
-      if (sent) {
+      if (sent.sent) {
         await db
           .update(tempLicensesTable)
           .set({ warningSentAt: new Date(), updatedAt: new Date() })
