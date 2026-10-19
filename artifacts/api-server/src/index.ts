@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { startLicenseCron } from "./lib/licenseCron";
+import { getResendFromEmailError, resolveResendFromEmail } from "./lib/emailSender";
 
 async function initStripe() {
   const appDomain = process.env.APP_DOMAIN ?? "localhost";
@@ -19,6 +20,13 @@ if (!rawPort) {
 const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+const resendSenderError = getResendFromEmailError();
+if (resendSenderError) {
+  logger.error({ setting: "RESEND_FROM_EMAIL" }, resendSenderError);
+} else {
+  logger.info({ from: resolveResendFromEmail() }, "Resend sender configured");
 }
 
 await initStripe();

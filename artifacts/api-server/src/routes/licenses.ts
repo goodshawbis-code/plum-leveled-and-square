@@ -3,7 +3,7 @@ import { eq, desc } from "drizzle-orm";
 import { db, tempLicensesTable, projectsTable } from "@workspace/db";
 import { z } from "zod";
 import crypto from "crypto";
-import { sendLicenseInviteEmail } from "../lib/email";
+import { PLS_INVITE_PAGE_URL, sendLicenseInviteEmail } from "../lib/email";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -91,30 +91,36 @@ router.post("/admin/licenses", async (req: Request, res: Response) => {
       .returning();
 
     if (body.data.sendInviteEmail) {
-      const appDomain = process.env.APP_DOMAIN ?? "localhost";
-      const appUrl = appDomain !== "localhost"
-        ? `https://${appDomain}`
-        : `http://localhost:${process.env.PORT}`;
-
-      const sent = await sendLicenseInviteEmail({
+      const inviteEmail = await sendLicenseInviteEmail({
         to: license.granteeEmail,
         granteeName: license.granteeName,
         projectName: project.name,
         accessToken: token,
         expiresAt: license.expiresAt,
-        appUrl,
       });
 
-      if (sent) {
+      if (inviteEmail.sent) {
         await db
           .update(tempLicensesTable)
           .set({ inviteSentAt: new Date() })
           .where(eq(tempLicensesTable.id, license.id));
         license.inviteSentAt = new Date();
       }
+
+      res.status(201).json({
+        ...license,
+        projectName: project.name,
+        inviteEmail,
+        shareableInvite: { pageUrl: PLS_INVITE_PAGE_URL, code: token },
+      });
+      return;
     }
 
-    res.status(201).json({ ...license, projectName: project.name });
+    res.status(201).json({
+      ...license,
+      projectName: project.name,
+      shareableInvite: { pageUrl: PLS_INVITE_PAGE_URL, code: token },
+    });
   } catch (err) {
     req.log.error({ err }, "Failed to create license");
     res.status(500).json({ error: "Failed to create license" });
@@ -255,28 +261,25 @@ router.post("/admin/licenses/:id/resend-invite", async (req: Request, res: Respo
       .from(projectsTable)
       .where(eq(projectsTable.id, license.projectId));
 
-    const appDomain = process.env.APP_DOMAIN ?? "localhost";
-    const appUrl = appDomain !== "localhost"
-      ? `https://${appDomain}`
-      : `http://localhost:${process.env.PORT}`;
-
-    const sent = await sendLicenseInviteEmail({
+    const inviteEmail = await sendLicenseInviteEmail({
       to: license.granteeEmail,
       granteeName: license.granteeName,
       projectName: project?.name ?? "Your Project",
       accessToken: license.token,
       expiresAt: license.expiresAt,
-      appUrl,
     });
 
-    if (sent) {
+    if (inviteEmail.sent) {
       await db
         .update(tempLicensesTable)
         .set({ inviteSentAt: new Date(), updatedAt: new Date() })
         .where(eq(tempLicensesTable.id, license.id));
     }
 
-    res.json({ sent });
+    res.json({
+      inviteEmail,
+      shareableInvite: { pageUrl: PLS_INVITE_PAGE_URL, code: license.token },
+    });
   } catch (err) {
     req.log.error({ err }, "Failed to resend invite");
     res.status(500).json({ error: "Failed to resend invite" });

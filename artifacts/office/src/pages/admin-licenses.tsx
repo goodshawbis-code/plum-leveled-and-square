@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   ShieldOff,
   Mail,
+  Share2,
   Calendar,
   User,
   FolderKanban,
@@ -69,6 +70,8 @@ interface Project {
   name: string;
 }
 
+const PLS_INVITE_PAGE_URL = "https://plumb-leveled-and-square.superapp.now/";
+
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("en-US", {
     month: "short",
@@ -80,6 +83,31 @@ function formatDate(d: string) {
 function daysUntil(d: string) {
   const diff = new Date(d).getTime() - Date.now();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+async function shareInvite(license: License): Promise<"shared" | "copied" | "cancelled" | "failed"> {
+  const projectName = license.projectName ?? `Project #${license.projectId}`;
+  const invitationText = `You've been invited to access ${projectName} on Plumb Level and Square.\nInvitation code: ${license.token}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "PLS project invitation",
+        text: invitationText,
+        url: PLS_INVITE_PAGE_URL,
+      });
+      return "shared";
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return "cancelled";
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(`${invitationText}\n${PLS_INVITE_PAGE_URL}`);
+    return "copied";
+  } catch {
+    return "failed";
+  }
 }
 
 function LicenseStatusBadge({ license }: { license: License }) {
@@ -139,11 +167,17 @@ export default function AdminLicenses() {
       if (!r.ok) throw new Error((await r.json()).error ?? "Failed to create license");
       return r.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin-licenses"] });
       setCreateOpen(false);
       setForm({ projectId: "", granteeName: "", granteeEmail: "", expiresAt: "", sendInviteEmail: true });
-      toast({ title: "License created", description: "The GC/client has been granted access." });
+      toast({
+        title: data.inviteEmail?.sent ? "License created and invite sent" : "License created; invite email not sent",
+        description: data.inviteEmail?.sent
+          ? "The invitation email was accepted by Resend."
+          : `${data.inviteEmail?.error ?? "No invitation email was requested."} Use Share on the license to send the code yourself.`,
+        variant: data.inviteEmail && !data.inviteEmail.sent ? "destructive" : "default",
+      });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -187,12 +221,13 @@ export default function AdminLicenses() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin-licenses"] });
+      const inviteEmail = data.inviteEmail;
       toast({
-        title: data.sent ? "Invite sent" : "Email not sent",
-        description: data.sent
-          ? "Invite email delivered successfully."
-          : "Configure RESEND_API_KEY to enable email delivery.",
-        variant: data.sent ? "default" : "destructive",
+        title: inviteEmail?.sent ? "Invite sent" : "Email not sent",
+        description: inviteEmail?.sent
+          ? "The invitation email was accepted by Resend."
+          : `${inviteEmail?.error ?? "The invitation email was not sent."} Use Share on the license to send the code yourself.`,
+        variant: inviteEmail?.sent ? "default" : "destructive",
       });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -324,6 +359,25 @@ export default function AdminLicenses() {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs"
+                        onClick={async () => {
+                          const result = await shareInvite(license);
+                          if (result === "shared") {
+                            toast({ title: "Invitation ready to share", description: "The PLS page and invitation code were added." });
+                          } else if (result === "copied") {
+                            toast({ title: "Invitation copied", description: "The PLS page and invitation code are ready to paste." });
+                          } else if (result === "failed") {
+                            toast({ title: "Could not share invitation", description: "Allow sharing or clipboard access in your browser, then try again.", variant: "destructive" });
+                          }
+                        }}
+                        title="Share invitation code and PLS page"
+                      >
+                        <Share2 className="h-3.5 w-3.5 mr-1" />
+                        Share
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
